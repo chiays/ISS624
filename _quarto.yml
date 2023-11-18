@@ -6,10 +6,12 @@ website:
   navbar:
   
     left: 
-      - text: Hxxds-on Exercises
+      - text: Hands-on Exercises
         menu: 
-          - text: Hanads-on Exercise 1
+          - text: Hands-on Exercise 1
             href: Hands-on_Ex/Hands-on_Ex1/Hands-on_Ex1.html
+          - text: Hands-on Exercise 2
+
             
       - text: In-class Exercises
         menu: 
