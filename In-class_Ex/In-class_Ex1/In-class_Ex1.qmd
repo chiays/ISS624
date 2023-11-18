@@ -1,0 +1,51 @@
+---
+title: "In-class Exercise 1"
+date: "18 November 2023"
+format: html
+editor: visual
+---
+## 1 Getting Started
+
+In this hands-on exercise, two R packages will be used. They are:
+
+sf for importing, managing, and processing geospatial data, and tidyverse for performing data science tasks such as importing, wrangling and visualising data. Tidyverse consists of a family of R packages. In this hands-on exercise, the following packages will be used:
+
+readr for importing csv data, readxl for importing Excel worksheet, tidyr for manipulating data, dplyr for transforming data, and ggplot2 for visualising data
+
+Type the following code chunk.
+
+```{r}
+pacman::p_load(sf, tidyverse)
+```
+
+What we can learn from the code chunk above:
+
+p_load function pf pacman package is used to install and load sf and tidyverse pacages into R environment.
+
+## 1.1 Importing Geospatial Data
+
+In this section, you will learn how to import the following geospatial data into R by using st_read() of sf package:
+
+MPSZ-2019, a polygon feature layer in ESRI shapefile format, BusStop, a line feature layer in ESRI shapefile format.
+
+#### 1.1.1 Importing polygon feature data in shapefile format
+
+The code chunk below uses st_read() function of sf package to import MPSZ-2019 shapefile into R as a polygon feature data frame. Note that when the input geospatial data is in shapefile format, two arguments will be used, namely: dsn to define the data path and layer to provide the shapefile name. Also note that no extension such as .shp, .dbf, .prj and .shx are needed.
+
+```{r}
+mpsz = st_read(dsn = "data/geospatial", 
+                  layer = "MPSZ-2019")
+```
+
+
+#### 1.1.2 Importing polyline feature data in shapefile form
+
+The code chunk below uses st_read() function of sf package to import BusStop shapefile into R as line feature data frame.
+
+```{r}
+cyclingpath = st_read(dsn = "data/geospatial", 
+                         layer = "BusStop")
+```
+
+The message above reveals that there are a total of 5161 features and 3 fields in BusStop linestring feature data frame and it is in svy21 projected coordinates system too.
+
