@@ -6,28 +6,15 @@ website:
   navbar:
   
     left: 
-<<<<<<< HEAD
       - text: Hxxds-on Exercises
         menu: 
-          - text: Hands-on Exercise 1
+          - text: Hanads-on Exercise 1
             href: Hands-on_Ex/Hands-on_Ex1/Hands-on_Ex1.html
             
       - text: In-class Exercises
         menu: 
           - text: In-class Exercise 1
             href: In-class_Ex/In-class_Ex1/In-class_Ex1.html
-=======
-      - menu:
-        - text: Hands-on Exercises
-          menu: 
-            - text: Hands-on Exercise 1
-              href: Hands-on_Ex/Hands-on_Ex1/Hands-on_Ex1.html
-            
-        - text: In-class Exercises
-          menu: 
-            - text: In-class Exercise 1
-              href: In-class_Ex/In-class_Ex1/In-class_Ex1.html
->>>>>>> f3a7cb19498a236970233aa77b039ee5e1c69071
             
     right:
       - href: index.qmd
