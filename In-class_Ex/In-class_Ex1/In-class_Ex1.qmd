@@ -43,9 +43,48 @@ mpsz = st_read(dsn = "data/geospatial",
 The code chunk below uses st_read() function of sf package to import BusStop shapefile into R as line feature data frame.
 
 ```{r}
-cyclingpath = st_read(dsn = "data/geospatial", 
+BusStop = st_read(dsn = "data/geospatial", 
                          layer = "BusStop")
 ```
 
 The message above reveals that there are a total of 5161 features and 3 fields in BusStop linestring feature data frame and it is in svy21 projected coordinates system too.
 
+
+### 1.2 Importing and Converting An Aspatial Data
+
+In practice, it is not unusual that we will come across data such as listing of Inside Airbnb. We call this kind of data aspatial data. This is because it is not a geospatial data but among the data fields, there are two fields that capture the x- and y-coordinates of the data points.
+
+In this section, you will learn how to import an aspatial data into R environment and save it as a tibble data frame. Next, you will convert it into a simple feature data frame.
+
+For the purpose of this exercise, the listings.csv data downloaded from AirBnb will be used.
+
+#### 1.2.1 Importing the aspatial data
+
+Since listings data set is in csv file format, we will use read_csv() of readr package to import listing.csv as shown the code chunk below. The output R object is called listings and it is a tibble data frame.
+
+```{r}
+odbus0823 <- read_csv("data/aspatial/origin_destination_bus_202308.csv")
+```
+
+After importing the data file into R, it is important for us to examine if the data file has been imported correctly.
+
+The code chunk below shows list() of Base R instead of glimpse() is used to do the job.
+
+```{r}
+list(odbus0823) 
+```
+
+
+```{r}
+odbus0923 <- read_csv("data/aspatial/origin_destination_bus_202309.csv")
+```
+```{r}
+list(odbus0923) 
+```
+
+```{r}
+odbus1023 <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
+```
+```{r}
+list(odbus1023) 
+```
