@@ -2,10 +2,14 @@ project:
   type: website
 
 website:
-  title: "ISS624"
+  title: "ISSS624 (**CHIAYS**)"
+  site-url: "https://isss624-chiays.netlify.app"
+  
   navbar:
   
     left: 
+      - icon: github
+        href: https://github.com/
       - text: Hands-on Exercises
         menu: 
           - text: Hands-on Exercise 1
@@ -23,11 +27,17 @@ website:
         text: Home
       - about.qmd
 
+    page-footer:
+      - icon: tenor
+        href: https://tenor.com/view/map-explore-trail-compass-colorful-gif-13844757
+
+        
 format:
   html:
-    theme: cosmo
+    theme: solar
     css: styles.css
     toc: true
 
 editor: visual
+
 
