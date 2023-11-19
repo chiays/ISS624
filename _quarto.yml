@@ -8,8 +8,6 @@ website:
   navbar:
   
     left: 
-      - icon: github
-        href: https://github.com/
       - text: Hands-on Exercises
         menu: 
           - text: Hands-on Exercise 1
