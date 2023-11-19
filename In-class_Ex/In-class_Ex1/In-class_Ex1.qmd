@@ -1,9 +1,11 @@
 ---
 title: "In-class Exercise 1"
+author: "Chia Yong Soon"
 date: "18 November 2023"
 format: html
 editor: visual
 ---
+
 ## 1 Getting Started
 
 In this hands-on exercise, two R packages will be used. They are:
@@ -37,7 +39,6 @@ mpsz = st_read(dsn = "data/geospatial",
                   layer = "MPSZ-2019")
 ```
 
-
 #### 1.1.2 Importing polyline feature data in shapefile form
 
 The code chunk below uses st_read() function of sf package to import BusStop shapefile into R as line feature data frame.
@@ -48,7 +49,6 @@ BusStop = st_read(dsn = "data/geospatial",
 ```
 
 The message above reveals that there are a total of 5161 features and 3 fields in BusStop linestring feature data frame and it is in svy21 projected coordinates system too.
-
 
 ### 1.2 Importing and Converting An Aspatial Data
 
@@ -74,17 +74,79 @@ The code chunk below shows list() of Base R instead of glimpse() is used to do t
 list(odbus0823) 
 ```
 
+```{r}
+glimpse(odbus0823) 
+```
 
 ```{r}
 odbus0923 <- read_csv("data/aspatial/origin_destination_bus_202309.csv")
 ```
+
 ```{r}
 list(odbus0923) 
 ```
 
 ```{r}
+glimpse(odbus0923) 
+```
+
+```{r}
 odbus1023 <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
 ```
+
 ```{r}
 list(odbus1023) 
 ```
+
+```{r}
+glimpse(odbus1023) 
+```
+
+
+From the above, we see that ORIGIN_PT_CODE and DESTINATION_PT_CODE are character data type. We should convert these two columns from characters into factors because these two columns contains the bus stop numbers and we will need these bus stop numbers to get the bus stop locations in subsequent steps. We will use as.factor() to convert the data from character to factor.
+
+```{r}
+odbus0823$ORIGIN_PT_CODE <- as.factor(odbus0823$ORIGIN_PT_CODE)
+odbus0823$DESTINATION_PT_CODE <- as.factor(odbus0823$DESTINATION_PT_CODE)
+```
+
+### 2.1 Extracting the Study Data
+
+We will extract the study data using filter(), group_by() and summarise() to get our study data (i.e., weekday trips that start from 7am and end before 10am).
+
+```{r}
+origintrip_7_9 <- odbus0823 %>%
+  filter(DAY_TYPE == "WEEKDAY") %>%
+  filter(TIME_PER_HOUR >= 7 & TIME_PER_HOUR <= 9) %>%
+  group_by(ORIGIN_PT_CODE) %>%
+  summarise(TRIPS = sum(TOTAL_TRIPS))
+```
+
+## 2 Working with Geospatial Data
+
+### 2.1 Use of st_read()
+
+We will use st_read() from sf package to read the geospatial data and use st_transform() from sf package to project the data into svy21 using its ESPG code 3414.
+
+```{r}
+busstop <- st_read(dsn = "data/geospatial", layer = "BusStop") %>%
+  st_transform(crs = 3414)
+```
+Let us take a look at the imported data:
+
+```{r}
+busstop
+```
+
+```{r}
+mpsz <- st_read(dsn = "data/geospatial", layer = "MPSZ-2019") %>%
+  st_transform(crs = 3414)
+```
+
+Let us take a look at the imported data:
+
+```{r}
+mpsz
+```
+
+

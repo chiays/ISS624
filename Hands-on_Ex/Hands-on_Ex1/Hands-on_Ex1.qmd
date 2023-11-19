@@ -1,5 +1,6 @@
 ---
 title: "Hands-on Exercise 1"
+author: "Chia Yong Soon"
 date: "18 November 2023"
 format: html
 editor: visual
