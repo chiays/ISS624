@@ -1,7 +1,6 @@
 ---
 title: "Hands-on Exercise 1"
 date: "18 November 2023"
-date: last-modified
 format: html
 editor: visual
 ---
