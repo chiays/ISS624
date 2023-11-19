@@ -2,7 +2,7 @@ project:
   type: website
 
 website:
-  title: "ISSS624 (**CHIAYS**)"
+  title: "**ISSS624 (CHIAYS)**"
   site-url: "https://isss624-chiays.netlify.app"
   
   navbar:
@@ -27,11 +27,11 @@ website:
         text: Home
       - about.qmd
 
-    page-footer:
-      - icon: tenor
-        href: https://tenor.com/view/map-explore-trail-compass-colorful-gif-13844757
+  page-footer: 
+    left: "Copyright 2023, **Chiays**"
+    background: light
 
-        
+     
 format:
   html:
     theme: solar
