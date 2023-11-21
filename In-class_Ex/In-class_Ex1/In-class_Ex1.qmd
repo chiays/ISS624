@@ -17,7 +17,7 @@ readr for importing csv data, readxl for importing Excel worksheet, tidyr for ma
 Type the following code chunk.
 
 ```{r}
-pacman::p_load(sf, tidyverse)
+pacman::p_load(tmap, sf, tidyverse, knitr)
 ```
 
 What we can learn from the code chunk above:
@@ -102,7 +102,6 @@ list(odbus1023)
 glimpse(odbus1023) 
 ```
 
-
 From the above, we see that ORIGIN_PT_CODE and DESTINATION_PT_CODE are character data type. We should convert these two columns from characters into factors because these two columns contains the bus stop numbers and we will need these bus stop numbers to get the bus stop locations in subsequent steps. We will use as.factor() to convert the data from character to factor.
 
 ```{r}
@@ -122,6 +121,24 @@ origintrip_7_9 <- odbus0823 %>%
   summarise(TRIPS = sum(TOTAL_TRIPS))
 ```
 
+It should look similar to the data table below.
+
+```{r}
+kable(head(origintrip_7_9))
+```
+
+We will save the output in rds format for future used.
+
+```{r}
+write_rds(origintrip_7_9, "data/rds/origintrip_7_9.rds")
+```
+
+The code chunk below will be used to import the save origintrip_7_9.rds into R environment.
+
+```{r}
+origintrip_7_9 <- read_rds("data/rds/origintrip_7_9.rds")
+```
+
 ## 2 Working with Geospatial Data
 
 ### 2.1 Use of st_read()
@@ -132,6 +149,7 @@ We will use st_read() from sf package to read the geospatial data and use st_tra
 busstop <- st_read(dsn = "data/geospatial", layer = "BusStop") %>%
   st_transform(crs = 3414)
 ```
+
 Let us take a look at the imported data:
 
 ```{r}
@@ -149,4 +167,76 @@ Let us take a look at the imported data:
 mpsz
 ```
 
+## 3 Geospatial data wrangling
 
+### 3.1 Combining Busstop and mpsz
+
+Code chunk below populates the planning subzone code (i.e. SUBZONE_C) of mpsz sf data frame into busstop sf data frame.
+
+```{r}
+busstop_mpsz <- st_intersection(busstop, mpsz) %>%
+  select(BUS_STOP_N, SUBZONE_C) %>%
+  st_drop_geometry()
+```
+
+Before moving to the next step, it is wise to save the output into rds format.
+
+```{r}
+write_rds(busstop_mpsz, "data/rds/busstop_mpsz.csv")  
+```
+
+```{r}
+origin_data <- left_join(origintrip_7_9 , busstop_mpsz,
+            by = c("ORIGIN_PT_CODE" = "BUS_STOP_N")) %>%
+  rename(ORIGIN_BS = ORIGIN_PT_CODE,
+         ORIGIN_SZ = SUBZONE_C)
+```
+
+Before continue, it is a good practice for us to check for duplicating records.
+
+```{r}
+duplicate <- origin_data %>%
+  group_by_all() %>%
+  filter(n()>1) %>%
+  ungroup()
+```
+
+If duplicated records are found, the code chunk below will be used to retain the unique records.
+
+```{r}
+origin_data <- unique(origin_data)
+```
+
+It will be a good practice to confirm if the duplicating records issue has been addressed fully.
+
+Next, write a code chunk to update od_data data frame with the planning subzone codes.
+
+```{r}
+mpsz_origtrip <- left_join(mpsz, 
+                           origin_data,
+                           by = c("SUBZONE_C" = "ORIGIN_SZ"))
+```
+
+## 4 Choropleth Visualisation
+
+Using the steps you had learned, prepare a choropleth map showing the distribution of passenger trips at planning sub-zone level.
+
+```{r}
+tm_shape(mpsz_origtrip)+
+  tm_fill("TRIPS", 
+          style = "quantile", 
+          palette = "Blues",
+          title = "Passenger trips") +
+  tm_layout(main.title = "Passenger trips generated at planning sub-zone level",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2) +
+  tm_credits("Source: Planning Sub-zone boundary from Urban Redevelopment Authorithy (URA)\n and Population data from Department of Statistics DOS", 
+             position = c("left", "bottom"))
+```
