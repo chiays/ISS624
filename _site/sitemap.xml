@@ -1,47 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://isss624-chiays.netlify.app/Hands-on_Ex/Hands-on_Ex1/Hands-on_Ex1.html</loc>
-    <lastmod>2023-11-19T09:36:29.343Z</lastmod>
-  </url>
-  <url>
-    <loc>https://isss624-chiays.netlify.app/In-class_Ex/In-class_Ex1/In-class_Ex1.html</loc>
-    <lastmod>2023-11-19T09:36:44.819Z</lastmod>
-  </url>
-  <url>
     <loc>https://isss624-chiays.netlify.app/Hands-on_Ex/Hands-on_Ex2/Hands-on_Ex2.html</loc>
-    <lastmod>2023-11-19T10:10:50.047Z</lastmod>
+    <lastmod>2023-11-26T08:05:42.483Z</lastmod>
   </url>
   <url>
-    <loc>https://isss624-chiays.netlify.app/In-class_Ex/In-class_Ex1/data/geospatial/MPSZ-2019.html</loc>
-    <lastmod>2023-11-19T08:53:49.828Z</lastmod>
-  </url>
-  <url>
-    <loc>https://isss624-chiays.netlify.app/index.html</loc>
-    <lastmod>2023-11-26T06:51:43.134Z</lastmod>
-  </url>
-  <url>
-    <loc>https://isss624-chiays.netlify.app/about.html</loc>
-    <lastmod>2023-11-19T08:54:28.205Z</lastmod>
-  </url>
-  <url>
-    <loc>https://isss624-chiays.netlify.app/In-class_Ex/In-class_Ex2/In-class_Ex2.html</loc>
-    <lastmod>2023-11-26T06:51:46.047Z</lastmod>
-  </url>
-  <url>
-    <loc>https://isss624-chiays.netlify.app/In-class_Ex/In-class_Ex2/In-class_Ex2-GLSA.html</loc>
-    <lastmod>2023-11-26T07:51:33.265Z</lastmod>
+    <loc>https://isss624-chiays.netlify.app/Hands-on_Ex/Hands-on_Ex1/Hands-on_Ex1.html</loc>
+    <lastmod>2023-11-26T08:05:23.903Z</lastmod>
   </url>
   <url>
     <loc>https://isss624-chiays.netlify.app/Take-home_Ex/Take-home_Ex1/data/geospatial/MPSZ-2019.html</loc>
-    <lastmod>2023-11-26T07:33:45.028Z</lastmod>
+    <lastmod>2023-11-26T08:05:05.253Z</lastmod>
   </url>
   <url>
     <loc>https://isss624-chiays.netlify.app/In-class_Ex/In-class_Ex2/In-class_Ex2-SW.html</loc>
-    <lastmod>2023-11-26T07:51:28.024Z</lastmod>
+    <lastmod>2023-11-26T08:05:50.282Z</lastmod>
+  </url>
+  <url>
+    <loc>https://isss624-chiays.netlify.app/In-class_Ex/In-class_Ex1/In-class_Ex1.html</loc>
+    <lastmod>2023-11-26T08:04:59.225Z</lastmod>
+  </url>
+  <url>
+    <loc>https://isss624-chiays.netlify.app/In-class_Ex/In-class_Ex1/data/geospatial/MPSZ-2019.html</loc>
+    <lastmod>2023-11-26T08:04:57.139Z</lastmod>
+  </url>
+  <url>
+    <loc>https://isss624-chiays.netlify.app/In-class_Ex/In-class_Ex2/In-class_Ex2-GLSA.html</loc>
+    <lastmod>2023-11-26T08:05:56.118Z</lastmod>
   </url>
   <url>
     <loc>https://isss624-chiays.netlify.app/In-class_Ex/In-class_Ex2/In-class_Ex2_EHSA.html</loc>
-    <lastmod>2023-11-26T07:53:45.312Z</lastmod>
+    <lastmod>2023-11-26T08:05:04.618Z</lastmod>
   </url>
 </urlset>
