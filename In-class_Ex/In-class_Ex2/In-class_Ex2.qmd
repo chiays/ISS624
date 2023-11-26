@@ -1,0 +1,60 @@
+---
+title: "In-class_Ex2"
+author: "Yong Soon"
+date: "25 Nov 2023"
+date-modified: "date-modified"
+---
+
+## Getting started
+
+### Installing and Loading the R Packages
+
+Four R packages will be used for this in-class exercise, theu are sf, sfdep, tmap, tidyverse.
+
+::: {style="font-size: 1.5em"}
+```{r}
+pacman::p_load(sf, sfdep, tmap, tidyverse, knitr, plotly)
+# knitr is to generate HTML table
+# tidyverse consists of many different packages
+```
+:::
+
+### The Data
+
+For the purpose of this in-class exercise, the Hunan data sets will be used. Theree are two data sets in this use case, they are:
+
+- Hunan, a geospatial data set in ESRI sharefile format, and
+- Hunan_2012, an attribute data set in csv format
+
+#### Importing geospatial data
+
+```{r}
+Hunan = st_read(dsn = "data/geospatial", 
+                         layer = "Hunan")
+```
+
+
+#### Importing attribute table
+
+```{r}
+Hunan_2012 <- read_csv("data/aspatial/Hunan_2012.csv")
+```
+
+
+#### Combining both dataframe by using left join
+
+
+#### Plotting a choropleth map
+
+
+
+### Deriving contiguity Spatial Weights
+
+
+
+### Deriving contiguity weights Queen's method
+
+
+
+### Distance-based Weights
+
