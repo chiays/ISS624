@@ -31,7 +31,11 @@ website:
 
       - text: Take-home Exercises
         menu: 
-          - text: Take-home Exercise 1
+          - text: Take-home Exercise 1-WDMP
+            href: Take-home_Ex/Take-home_Ex1/Take-home_Ex1--WDMP.html
+          - text: Take-home Exercise 1-WDAP
+          - text: Take-home Exercise 1-WEMP
+          - text: Take-home Exercise 1-WEEP
           - text: Take-home Exercise 2
          
     right:
