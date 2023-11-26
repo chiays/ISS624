@@ -6,38 +6,35 @@ date-modified: "last-modified"
 ---
 
 ## Overview
+
 Emerging Hot Spot Analysis (EHSA) is a spatio-temporal analysis method for revealing and describing how hot spot and cold spot areas evolve over time. The analysis consist of four main steps:
 
-- Building a space-time cube,
-- Calculating Getis-Ord local Gi* statistic for each bin by using an FDR correction,
-- Evaluating these hot and cold spot trends by using Mann-Kendall trend test,
-- Categorising each study area location by referring to the resultant trend z-score and p-value for each location with data, and with the hot spot z-score and p-value for each bin.
-
+-   Building a space-time cube,
+-   Calculating Getis-Ord local Gi\* statistic for each bin by using an FDR correction,
+-   Evaluating these hot and cold spot trends by using Mann-Kendall trend test,
+-   Categorising each study area location by referring to the resultant trend z-score and p-value for each location with data, and with the hot spot z-score and p-value for each bin.
 
 ## Getting started
 
 ### Installing and Loading the R Packages
+
 As usual, p_load() of pacman package will be used to check if the necessary packages have been installed in R, if yes, load the packages on R environment.
 
 Five R packages are need for this in-class exercise, they are: sf, sfdep, tmap, plotly and tidyverse.
 
-Do It Yourself!
-Using the steps you learned in previous lesson, install and load sf, tmap, sfdep and tidyverse packages into R environment.
+Do It Yourself! Using the steps you learned in previous lesson, install and load sf, tmap, sfdep and tidyverse packages into R environment.
 
 ```{r}
 pacman::p_load(sf, sfdep, tmap, plotly, tidyverse)
 ```
 
-
 ### The Data
+
 For the purpose of this in-class exercise, the Hunan data sets will be used. There are two data sets in this use case, they are:
 
-Hunan, a geospatial data set in ESRI shapefile format, and
-Hunan_GDPPC, an attribute data set in csv format.
-Before getting started, reveal the content of Hunan_GDPPC.csv by using Notepad and MS Excel.
+Hunan, a geospatial data set in ESRI shapefile format, and Hunan_GDPPC, an attribute data set in csv format. Before getting started, reveal the content of Hunan_GDPPC.csv by using Notepad and MS Excel.
 
-Importing geospatial data
-In the code chunk below, st_read() of sf package is used to import Hunan shapefile into R.
+Importing geospatial data In the code chunk below, st_read() of sf package is used to import Hunan shapefile into R.
 
 ```{r}
 hunan <- st_read(dsn = "data/geospatial", 
@@ -45,20 +42,20 @@ hunan <- st_read(dsn = "data/geospatial",
 
 ```
 
-Do it Yourself
-Using the steps you learned in previous lesson, examine the content hunan sf data.frame
+Do it Yourself Using the steps you learned in previous lesson, examine the content hunan sf data.frame
 
 ### Importing attribute table
+
 In the code chunk below, read_csv() of readr is used to import Hunan_GDPPC.csv into R.
 
 ```{r}
 GDPPC <- read_csv("data/aspatial/Hunan_GDPPC.csv")
 ```
 
-Do it Yourself
-Using the steps you learned in previous lesson, examine the content the GDPPC tibble data.frame.
+Do it Yourself Using the steps you learned in previous lesson, examine the content the GDPPC tibble data.frame.
 
 ## Creating a Time Series Cube
+
 Before getting started, students must read this article to learn the basic concept of spatio-temporal cube and its implementation in sfdep package.
 
 In the code chunk below, spacetime() of sfdep is used to create an spacetime cube.
@@ -77,10 +74,12 @@ is_spacetime_cube(GDPPC_st)
 
 The TRUE return confirms that GDPPC_st object is indeed an time-space cube.
 
-### Computing Gi*
-Next, we will compute the local Gi* statistics.
+### Computing Gi\*
+
+Next, we will compute the local Gi\* statistics.
 
 #### Deriving the spatial weights
+
 The code chunk below will be used to identify neighbors and to derive an inverse distance weights.
 
 ```{r}
@@ -95,19 +94,15 @@ GDPPC_nb <- GDPPC_st %>%
   set_wts("wt")
 ```
 
-Things to learn from the code chunk above
-activate() of dplyr package is used to activate the geometry context
-mutate() of dplyr package is used to create two new columns nb and wt.
-Then we will activate the data context again and copy over the nb and wt columns to each time-slice using set_nbs() and set_wts()
-row order is very important so do not rearrange the observations after using set_nbs() or set_wts().
-Note that this dataset now has neighbors and weights for each time-slice.
+Things to learn from the code chunk above activate() of dplyr package is used to activate the geometry context mutate() of dplyr package is used to create two new columns nb and wt. Then we will activate the data context again and copy over the nb and wt columns to each time-slice using set_nbs() and set_wts() row order is very important so do not rearrange the observations after using set_nbs() or set_wts(). Note that this dataset now has neighbors and weights for each time-slice.
 
 ```{r}
 head(GDPPC_nb)
 ```
 
-#### Computing Gi*
-We can use these new columns to manually calculate the local Gi* for each location. We can do this by grouping by Year and using local_gstar_perm() of sfdep package. After which, we use unnest() to unnest gi_star column of the newly created gi_starts data.frame.
+#### Computing Gi\*
+
+We can use these new columns to manually calculate the local Gi\* for each location. We can do this by grouping by Year and using local_gstar_perm() of sfdep package. After which, we use unnest() to unnest gi_star column of the newly created gi_starts data.frame.
 
 ```{r}
 gi_stars <- GDPPC_nb %>% 
@@ -118,7 +113,8 @@ gi_stars <- GDPPC_nb %>%
 ```
 
 ### Mann-Kendall Test
-With these Gi* measures we can then evaluate each location for a trend using the Mann-Kendall test. The code chunk below uses Changsha county.
+
+With these Gi\* measures we can then evaluate each location for a trend using the Mann-Kendall test. The code chunk below uses Changsha county.
 
 ```{r}
 cbg <- gi_stars %>% 
@@ -126,6 +122,7 @@ cbg <- gi_stars %>%
   filter(County == "Changsha") |> 
   select(County, Year, gi_star)
 ```
+
 Next, we plot the result by using ggplot2 functions.
 
 ```{r}
@@ -135,7 +132,6 @@ ggplot(data = cbg,
   geom_line() +
   theme_light()
 ```
-
 
 We can also create an interactive plot by using ggplotly() of plotly package.
 
@@ -157,7 +153,6 @@ cbg %>%
   tidyr::unnest_wider(mk)
 ```
 
-
 In the above result, sl is the p-value. This result tells us that there is a slight upward but insignificant trend.
 
 We can replicate this for each location by using group_by() of dplyr package.
@@ -172,6 +167,7 @@ ehsa <- gi_stars %>%
 ```
 
 Arrange to show significant emerging hot/cold spots
+
 ```{r}
 emerging <- ehsa %>% 
   arrange(sl, abs(tau)) %>% 
@@ -179,6 +175,7 @@ emerging <- ehsa %>%
 ```
 
 ### Performing Emerging Hotspot Analysis
+
 Lastly, we will perform EHSA analysis by using emerging_hotspot_analysis() of sfdep package. It takes a spacetime object x (i.e. GDPPC_st), and the quoted name of the variable of interest (i.e. GDPPC) for .var argument. The k argument is used to specify the number of time lags which is set to 1 by default. Lastly, nsim map numbers of simulation to be performed.
 
 ```{r}
@@ -200,10 +197,10 @@ ggplot(data = ehsa,
   geom_bar()
 ```
 
-
 Figure above shows that sporadic cold spots class has the high numbers of county.
 
 ### Visualising EHSA
+
 In this section, you will learn how to visualise the geographic distribution EHSA classes. However, before we can do so, we need to join both hunan and ehsa together by using the code chunk below.
 
 ```{r}
