@@ -1,6 +1,6 @@
 ---
 title: "Take-home_Ex1: Geospatial Analytics for Public Good"
-subtitle: "TASK :- Weekend morning peak (Period: 11am to 2pm)"
+subtitle: "TASK :- Weekend/holiday morning peak (Period: 11am to 2pm)"
 
 author: "Chia Yong Soon"
 date: "27 Nov 2023"
