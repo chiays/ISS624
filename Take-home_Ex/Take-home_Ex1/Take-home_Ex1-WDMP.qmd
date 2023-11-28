@@ -114,12 +114,13 @@ origin_WDMP_6_9 <- odbus1023 %>%
   summarise(TRIPS = sum(TOTAL_TRIPS))
 ```
 
+
 View the top few rows of the summarized trips by ORIGIN_PT_CODE.
 
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-kable(head(origin_WDMP_6_9))
+head(origin_WDMP_6_9)
 ```
 
 We will save the output in rds format for future used.
@@ -218,6 +219,15 @@ Next, append the planning subzone code from busstop_mpsz data frame onto origin_
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
+origin_SZ_HEX <- merge(origin_WDMP_6_9, busstop_mpsz, by.x = "ORIGIN_PT_CODE", by.y = "BUS_STOP_N", all = TRUE) %>%
+  rename(ORIGIN_BS = ORIGIN_PT_CODE, ORIGIN_SZ = SUBZONE_C) %>%
+  group_by(ORIGIN_BS)
+
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 origin_SZ <- left_join(origin_WDMP_6_9 , busstop_mpsz,
             by = c("ORIGIN_PT_CODE" = "BUS_STOP_N")) %>%
   rename(ORIGIN_BS = ORIGIN_PT_CODE,
@@ -231,13 +241,30 @@ Check for duplicate records
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
+duplicate_HEX <- origin_SZ_HEX %>%
+  group_by_all() %>%
+  filter(n()>1) %>%
+  ungroup()
+```
+
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 duplicate <- origin_SZ %>%
   group_by_all() %>%
   filter(n()>1) %>%
   ungroup()
 ```
 
+
 See if any duplicate records.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+glimpse(duplicate_HEX)
+```
 
 ```{r}
 #| code-fold: true
@@ -250,11 +277,25 @@ As shown above, there is none. Nonetheless, we can remove duplicate records (if 
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-origin_data <- unique(origin_SZ)
+origin_SZ_HEX <- unique(origin_SZ_HEX)
+```
+
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+origin_SZ <- unique(origin_SZ)
 ```
 
 Next, write a code chunk to update od_data data frame with the planning subzone codes.
 
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+origintrip_SZ_HEX <- left_join(BusStop, 
+                           origin_SZ_HEX,
+                           by = c("BUS_STOP_N" = "ORIGIN_BS"))
+```
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
@@ -263,10 +304,44 @@ origintrip_SZ <- left_join(mpsz,
                            by = c("SUBZONE_C" = "ORIGIN_SZ"))
 ```
 
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+non_finite_indices <- which(!is.finite(origintrip_SZ_HEX$TRIPS))
+origintrip_SZ_HEX$TRIPS[!is.finite(origintrip_SZ_HEX$TRIPS)] <- 0
+```
+
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+non_finite_indices <- which(!is.finite(origintrip_SZ$TOT_TRIPS))
+origintrip_SZ$TOT_TRIPS[!is.finite(origintrip_SZ$TOT_TRIPS)] <- 0
+```
+
+
 ## 6 Choropleth Visualisation
 
 Prepare a choropleth map showing the distribution of passenger trips at planning sub-zone level.
 
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+tm_shape(origintrip_SZ_HEX)+
+  tm_symbols(size = 0.5)+
+  tm_layout(main.title = "Passenger trips generated at planning sub-zone level",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2) +
+  tm_credits("Source: Planning Sub-zone boundary from URA\n and Passenger trips data from LTA", 
+             position = c("left", "bottom"))
+```
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
@@ -566,18 +641,36 @@ tm_shape(lisa_sig) +
   tm_borders(alpha = 0.4)
 ```
 
-### 9.6 Visualising LISA map at the hexagon level
+### 9.6 Visualising at the hexagon level
 
 ```{r}
-area_honeycomb_grid = st_make_grid(nb_queen_filtered, c(500,500), what = "polygons", square = FALSE)
+area_honeycomb_grid <- st_make_grid(origintrip_SZ_HEX, c(500, 500), what = "polygons", square = FALSE)
 
-honeycomb_grid_sf = st_sf(area_honeycomb_grid) %>%
+honeycomb_grid_sf <- st_sf(area_honeycomb_grid) %>%
   mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
 
-honeycomb_grid_sf$n_BS = lengths(st_intersects(honeycomb_grid_sf, nb_queen_filtered))
+# Use st_intersection to find intersecting features
+intersection_result <- st_intersection(honeycomb_grid_sf, origintrip_SZ_HEX)
 
-honeycomb_count = filter(honeycomb_grid_sf, n_BS > 0)
+# Create a data frame with grid_id and the desired column
+value_df <- data.frame(
+  grid_id = intersection_result$grid_id,
+  TRIPS = intersection_result$TRIPS
+)
+
+# Summarize the values for each grid cell
+summarized_values <- aggregate(TRIPS ~ grid_id, value_df, sum)
+
+# Merge the summarized values back to honeycomb_grid_sf
+honeycomb_grid_sf <- merge(honeycomb_grid_sf, summarized_values, by = "grid_id", all.x = TRUE)
+
+# Create a new column "n_BS" to store the sum of TOT_TRIPS for each grid cell
+honeycomb_grid_sf$n_BS <- ifelse(!is.na(honeycomb_grid_sf$TRIPS), honeycomb_grid_sf$TRIPS, 0)
+
+# Filter out cells with a count of n_BS greater than 0
+honeycomb_count <- filter(honeycomb_grid_sf, n_BS > 0)
 ```
+
 
 ```{r}
 tmap_mode("view")

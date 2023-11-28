@@ -569,6 +569,28 @@ tm_shape(lisa_sig) +
 ### 9.6 Visualising LISA map at the hexagon level
 
 ```{r}
+area_honeycomb_grid <- st_make_grid(nb_queen_filtered, c(500, 500), what = "polygons", square = FALSE)
+
+honeycomb_grid_sf <- st_sf(area_honeycomb_grid) %>%
+  mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
+
+intersection_result <- st_intersection(honeycomb_grid_sf, nb_queen_filtered)
+
+value_df <- data.frame(
+  grid_id = intersection_result$grid_id,
+  TOT_TRIPS = intersection_result$TOT_TRIPS
+)
+
+summarized_values <- aggregate(TOT_TRIPS ~ grid_id, value_df, sum)
+
+honeycomb_grid_sf <- merge(honeycomb_grid_sf, summarized_values, by = "grid_id", all.x = TRUE)
+
+honeycomb_grid_sf$n_BS <- ifelse(!is.na(honeycomb_grid_sf$TOT_TRIPS), honeycomb_grid_sf$TOT_TRIPS, 0)
+
+honeycomb_count <- filter(honeycomb_grid_sf, n_BS > 0)
+```
+
+
 area_honeycomb_grid = st_make_grid(nb_queen_filtered, c(500,500), what = "polygons", square = FALSE)
 
 honeycomb_grid_sf = st_sf(area_honeycomb_grid) %>%
@@ -577,7 +599,7 @@ honeycomb_grid_sf = st_sf(area_honeycomb_grid) %>%
 honeycomb_grid_sf$n_BS = lengths(st_intersects(honeycomb_grid_sf, nb_queen_filtered))
 
 honeycomb_count = filter(honeycomb_grid_sf, n_BS > 0)
-```
+
 
 ```{r}
 tmap_mode("view")
