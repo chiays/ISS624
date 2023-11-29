@@ -1263,10 +1263,6 @@ all geometries</code></pre>
 <span id="cb76-12"><a href="#cb76-12" aria-hidden="true" tabindex="-1"></a>honeycomb_count <span class="ot">&lt;-</span> <span class="fu">filter</span>(honeycomb_grid_sf, n_BS <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>area_honeycomb_grid = st_make_grid(nb_queen_filtered, c(500,500), what = “polygons”, square = FALSE)</p>
-<p>honeycomb_grid_sf = st_sf(area_honeycomb_grid) %&gt;% mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))</p>
-<p>honeycomb_grid_sf$n_BS = lengths(st_intersects(honeycomb_grid_sf, nb_queen_filtered))</p>
-<p>honeycomb_count = filter(honeycomb_grid_sf, n_BS &gt; 0)</p>
 <div class="cell">
 <details>
 <summary>Show the code</summary>

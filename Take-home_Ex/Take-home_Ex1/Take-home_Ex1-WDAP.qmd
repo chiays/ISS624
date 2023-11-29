@@ -302,7 +302,6 @@ non_finite_indices <- which(!is.finite(origintrip_SZ_HEX$TRIPS))
 origintrip_SZ_HEX$TRIPS[!is.finite(origintrip_SZ_HEX$TRIPS)] <- 0
 ```
 
-
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
@@ -658,13 +657,6 @@ honeycomb_grid_sf$n_BS <- ifelse(!is.na(honeycomb_grid_sf$TRIPS), honeycomb_grid
 honeycomb_count <- filter(honeycomb_grid_sf, n_BS > 0)
 ```
 
-area_honeycomb_grid = st_make_grid(nb_queen_filtered, c(500,500), what = "polygons", square = FALSE)
-
-honeycomb_grid_sf = st_sf(area_honeycomb_grid) %\>% mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
-
-honeycomb_grid_sf\$n_BS = lengths(st_intersects(honeycomb_grid_sf, nb_queen_filtered))
-
-honeycomb_count = filter(honeycomb_grid_sf, n_BS \> 0)
 
 ```{r}
 #| code-fold: true
