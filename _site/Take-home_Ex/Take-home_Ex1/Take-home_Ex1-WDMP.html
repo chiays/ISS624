@@ -1247,40 +1247,45 @@ tm_shape prior to each of them).</code></pre>
 <section id="visualising-at-the-hexagon-level" class="level3">
 <h3 class="anchored" data-anchor-id="visualising-at-the-hexagon-level">9.6 Visualising at the hexagon level</h3>
 <div class="cell">
+<details>
+<summary>Show the code</summary>
 <div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>area_honeycomb_grid <span class="ot">&lt;-</span> <span class="fu">st_make_grid</span>(origintrip_SZ_HEX, <span class="fu">c</span>(<span class="dv">500</span>, <span class="dv">500</span>), <span class="at">what =</span> <span class="st">"polygons"</span>, <span class="at">square =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>honeycomb_grid_sf <span class="ot">&lt;-</span> <span class="fu">st_sf</span>(area_honeycomb_grid) <span class="sc">%&gt;%</span></span>
 <span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">grid_id =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(<span class="fu">lengths</span>(area_honeycomb_grid)))</span>
 <span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Use st_intersection to find intersecting features</span></span>
-<span id="cb76-7"><a href="#cb76-7" aria-hidden="true" tabindex="-1"></a>intersection_result <span class="ot">&lt;-</span> <span class="fu">st_intersection</span>(honeycomb_grid_sf, origintrip_SZ_HEX)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>intersection_result <span class="ot">&lt;-</span> <span class="fu">st_intersection</span>(honeycomb_grid_sf, origintrip_SZ_HEX)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning: attribute variables are assumed to be spatially constant throughout
 all geometries</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a data frame with grid_id and the desired column</span></span>
-<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>value_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid_id =</span> intersection_result<span class="sc">$</span>grid_id,</span>
-<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">TRIPS =</span> intersection_result<span class="sc">$</span>TRIPS</span>
-<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Summarize the values for each grid cell</span></span>
-<span id="cb78-8"><a href="#cb78-8" aria-hidden="true" tabindex="-1"></a>summarized_values <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(TRIPS <span class="sc">~</span> grid_id, value_df, sum)</span>
+<details>
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>value_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid_id =</span> intersection_result<span class="sc">$</span>grid_id,</span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">TRIPS =</span> intersection_result<span class="sc">$</span>TRIPS</span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a>summarized_values <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(TRIPS <span class="sc">~</span> grid_id, value_df, sum)</span>
+<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb78-8"><a href="#cb78-8" aria-hidden="true" tabindex="-1"></a>honeycomb_grid_sf <span class="ot">&lt;-</span> <span class="fu">merge</span>(honeycomb_grid_sf, summarized_values, <span class="at">by =</span> <span class="st">"grid_id"</span>, <span class="at">all.x =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb78-9"><a href="#cb78-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb78-10"><a href="#cb78-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge the summarized values back to honeycomb_grid_sf</span></span>
-<span id="cb78-11"><a href="#cb78-11" aria-hidden="true" tabindex="-1"></a>honeycomb_grid_sf <span class="ot">&lt;-</span> <span class="fu">merge</span>(honeycomb_grid_sf, summarized_values, <span class="at">by =</span> <span class="st">"grid_id"</span>, <span class="at">all.x =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb78-12"><a href="#cb78-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb78-13"><a href="#cb78-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a new column "n_BS" to store the sum of TOT_TRIPS for each grid cell</span></span>
-<span id="cb78-14"><a href="#cb78-14" aria-hidden="true" tabindex="-1"></a>honeycomb_grid_sf<span class="sc">$</span>n_BS <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="sc">!</span><span class="fu">is.na</span>(honeycomb_grid_sf<span class="sc">$</span>TRIPS), honeycomb_grid_sf<span class="sc">$</span>TRIPS, <span class="dv">0</span>)</span>
-<span id="cb78-15"><a href="#cb78-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb78-16"><a href="#cb78-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter out cells with a count of n_BS greater than 0</span></span>
-<span id="cb78-17"><a href="#cb78-17" aria-hidden="true" tabindex="-1"></a>honeycomb_count <span class="ot">&lt;-</span> <span class="fu">filter</span>(honeycomb_grid_sf, n_BS <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb78-10"><a href="#cb78-10" aria-hidden="true" tabindex="-1"></a>honeycomb_grid_sf<span class="sc">$</span>n_BS <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="sc">!</span><span class="fu">is.na</span>(honeycomb_grid_sf<span class="sc">$</span>TRIPS), honeycomb_grid_sf<span class="sc">$</span>TRIPS, <span class="dv">0</span>)</span>
+<span id="cb78-11"><a href="#cb78-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb78-12"><a href="#cb78-12" aria-hidden="true" tabindex="-1"></a>honeycomb_count <span class="ot">&lt;-</span> <span class="fu">filter</span>(honeycomb_grid_sf, n_BS <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell">
+<details>
+<summary>Show the code</summary>
 <div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">"view"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stderr">
 <pre><code>tmap mode set to interactive viewing</code></pre>
 </div>
+<details>
+<summary>Show the code</summary>
 <div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>map_honeycomb <span class="ot">=</span> <span class="fu">tm_shape</span>(honeycomb_count) <span class="sc">+</span></span>
 <span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(</span>
 <span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="st">"n_BS"</span>,</span>
@@ -1300,6 +1305,7 @@ all geometries</code></pre>
 <span id="cb81-17"><a href="#cb81-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">col =</span> <span class="st">"grey40"</span>, <span class="at">lwd =</span> <span class="fl">0.7</span>)</span>
 <span id="cb81-18"><a href="#cb81-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb81-19"><a href="#cb81-19" aria-hidden="true" tabindex="-1"></a>map_honeycomb</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 
 <div class="leaflet html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-e56e817086117498a001" style="width:100%;height:464px;"></div>
@@ -1314,13 +1320,15 @@ all geometries</code></pre>
 <li>Point Distribution within Grid Cells:</li>
 </ol>
 <ul>
-<li>Darker tones for points in the grid cells at CBD area, which indicates higher activity during the weekday morning peak for the period from 6am to 9am.</li>
+<li>Darker tones for points in the grid cells at (Jurong point - 1251: 397,834) and (Causeway point - 2411: 305,997), which indicates higher activity during the weekday morning peak for the period from 6am to 9am. This could be due to both locations being the interchange where most commuters started their journey from various parts of Jurong and Woodlands.</li>
+<li>It is also interesting to note that there are commuters travelling from Johor Bahru (CIQ / Larkin Sentral) towards Singapore (probably to work).</li>
+<li>The other notable fact is there were not many commuters that started of their trip from CBD area (e.g.&nbsp;Raffles place - 3290: 4,778). This could be due to the low number of residential blocks.</li>
 </ul>
 <ol start="2" type="a">
 <li>Clustered Points:</li>
 </ol>
 <ul>
-<li>Clustered grid cells at CBD area suggests localized hotspot.</li>
+<li>Small cluster near at the Clementi area (2024 &amp; 2054) suggests localized hotspot. It could be an area where there are buses for commuters to travel to town as well as towards the Western part of Singapore.</li>
 <li>No data at grid cells which are located at Changi airport and water catchment areas.</li>
 </ul>
 <ol start="3" type="a">

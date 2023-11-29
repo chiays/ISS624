@@ -119,7 +119,7 @@ View the top few rows of the summarized trips by ORIGIN_PT_CODE.
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-kable(head(origin_WDAP_5_8))
+head(origin_WDAP_5_8)
 ```
 
 We will save the output in rds format for future used.
@@ -218,6 +218,15 @@ Next, append the planning subzone code from busstop_mpsz data frame onto origin_
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
+origin_SZ_HEX <- merge(origin_WDAP_5_8, busstop_mpsz, by.x = "ORIGIN_PT_CODE", by.y = "BUS_STOP_N", all = TRUE) %>%
+  rename(ORIGIN_BS = ORIGIN_PT_CODE, ORIGIN_SZ = SUBZONE_C) %>%
+  group_by(ORIGIN_BS)
+
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 origin_SZ <- left_join(origin_WDAP_5_8 , busstop_mpsz,
             by = c("ORIGIN_PT_CODE" = "BUS_STOP_N")) %>%
   rename(ORIGIN_BS = ORIGIN_PT_CODE,
@@ -227,6 +236,15 @@ origin_SZ <- left_join(origin_WDAP_5_8 , busstop_mpsz,
 ```
 
 Check for duplicate records
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+duplicate_HEX <- origin_SZ_HEX %>%
+  group_by_all() %>%
+  filter(n()>1) %>%
+  ungroup()
+```
 
 ```{r}
 #| code-fold: true
@@ -250,10 +268,24 @@ As shown above, there is none. Nonetheless, we can remove duplicate records (if 
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-origin_data <- unique(origin_SZ)
+origin_SZ_HEX <- unique(origin_SZ_HEX)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+origin_SZ <- unique(origin_SZ)
 ```
 
 Next, write a code chunk to update od_data data frame with the planning subzone codes.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+origintrip_SZ_HEX <- left_join(BusStop, 
+                           origin_SZ_HEX,
+                           by = c("BUS_STOP_N" = "ORIGIN_BS"))
+```
 
 ```{r}
 #| code-fold: true
@@ -263,9 +295,43 @@ origintrip_SZ <- left_join(mpsz,
                            by = c("SUBZONE_C" = "ORIGIN_SZ"))
 ```
 
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+non_finite_indices <- which(!is.finite(origintrip_SZ_HEX$TRIPS))
+origintrip_SZ_HEX$TRIPS[!is.finite(origintrip_SZ_HEX$TRIPS)] <- 0
+```
+
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+non_finite_indices <- which(!is.finite(origintrip_SZ$TOT_TRIPS))
+origintrip_SZ$TOT_TRIPS[!is.finite(origintrip_SZ$TOT_TRIPS)] <- 0
+```
+
 ## 6 Choropleth Visualisation
 
 Prepare a choropleth map showing the distribution of passenger trips at planning sub-zone level.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+tm_shape(origintrip_SZ_HEX)+
+  tm_symbols(size = 0.5)+
+  tm_layout(main.title = "Passenger trips generated at planning sub-zone level",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2) +
+  tm_credits("Source: Planning Sub-zone boundary from URA\n and Passenger trips data from LTA", 
+             position = c("left", "bottom"))
+```
 
 ```{r}
 #| code-fold: true
@@ -566,42 +632,43 @@ tm_shape(lisa_sig) +
   tm_borders(alpha = 0.4)
 ```
 
-### 9.6 Visualising LISA map at the hexagon level
+### 9.6 Visualising at the hexagon level
 
 ```{r}
-area_honeycomb_grid <- st_make_grid(nb_queen_filtered, c(500, 500), what = "polygons", square = FALSE)
+#| code-fold: true
+#| code-summary: "Show the code"
+area_honeycomb_grid <- st_make_grid(origintrip_SZ_HEX, c(500, 500), what = "polygons", square = FALSE)
 
 honeycomb_grid_sf <- st_sf(area_honeycomb_grid) %>%
   mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
 
-intersection_result <- st_intersection(honeycomb_grid_sf, nb_queen_filtered)
+intersection_result <- st_intersection(honeycomb_grid_sf, origintrip_SZ_HEX)
 
 value_df <- data.frame(
   grid_id = intersection_result$grid_id,
-  TOT_TRIPS = intersection_result$TOT_TRIPS
+  TRIPS = intersection_result$TRIPS
 )
 
-summarized_values <- aggregate(TOT_TRIPS ~ grid_id, value_df, sum)
+summarized_values <- aggregate(TRIPS ~ grid_id, value_df, sum)
 
 honeycomb_grid_sf <- merge(honeycomb_grid_sf, summarized_values, by = "grid_id", all.x = TRUE)
 
-honeycomb_grid_sf$n_BS <- ifelse(!is.na(honeycomb_grid_sf$TOT_TRIPS), honeycomb_grid_sf$TOT_TRIPS, 0)
+honeycomb_grid_sf$n_BS <- ifelse(!is.na(honeycomb_grid_sf$TRIPS), honeycomb_grid_sf$TRIPS, 0)
 
 honeycomb_count <- filter(honeycomb_grid_sf, n_BS > 0)
 ```
 
-
 area_honeycomb_grid = st_make_grid(nb_queen_filtered, c(500,500), what = "polygons", square = FALSE)
 
-honeycomb_grid_sf = st_sf(area_honeycomb_grid) %>%
-  mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
+honeycomb_grid_sf = st_sf(area_honeycomb_grid) %\>% mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
 
-honeycomb_grid_sf$n_BS = lengths(st_intersects(honeycomb_grid_sf, nb_queen_filtered))
+honeycomb_grid_sf\$n_BS = lengths(st_intersects(honeycomb_grid_sf, nb_queen_filtered))
 
-honeycomb_count = filter(honeycomb_grid_sf, n_BS > 0)
-
+honeycomb_count = filter(honeycomb_grid_sf, n_BS \> 0)
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 tmap_mode("view")
 
 map_honeycomb = tm_shape(honeycomb_count) +
@@ -629,11 +696,13 @@ map_honeycomb
 
 a)  Point Distribution within Grid Cells:
 
--   Darker tones for points in the grid cells at CBD area, which indicates higher activity during the weekday afternoon peak for the period from 5pm to 8pm.
+-   Darker tones for points in the grid cells at (Jurong point - 1251: 545,062) and (Causeway point - 2411: 473,062), which indicates higher activity during the weekday afternoon peak for the period from 5pm to 8pm. This could be due to both locations being the interchange where most commuters ended off their journey via MRT and would need to take feeder bus to various parts of Jurong and Woodlands.
+-   It is also interesting to note that there are commuters travelling from Johor Bahru (CIQ / Larkin Sentral) towards Singapore (probably to work midnight shift).
+-   The other notable fact is that not many commuters travelled home from CBD area (e.g. Raffles place - 3290: 39,152) via bus. This could be due to travelling home via MRT being more convenient at CBD area. Nonetheless, data shows that more commuters took bus during the weekday afternoon peak as compared to the weekday morning peak in CBD area.
 
 b)  Clustered Points:
 
--   Clustered grid cells at CBD area suggests localized hotspot.
+-   Small cluster near at the Clementi area (2024 & 2054) suggests localized hotspot. It could be an area where there are buses for commuters that came back from town or other parts of Singapore via MRT and were taking feeder bus to other parts of Clementi.
 -   No data at grid cells which are located at Changi airport and water catchment areas.
 
 c)  Spatial Correlation:

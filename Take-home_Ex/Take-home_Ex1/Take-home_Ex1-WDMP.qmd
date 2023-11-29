@@ -644,35 +644,33 @@ tm_shape(lisa_sig) +
 ### 9.6 Visualising at the hexagon level
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 area_honeycomb_grid <- st_make_grid(origintrip_SZ_HEX, c(500, 500), what = "polygons", square = FALSE)
 
 honeycomb_grid_sf <- st_sf(area_honeycomb_grid) %>%
   mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
 
-# Use st_intersection to find intersecting features
 intersection_result <- st_intersection(honeycomb_grid_sf, origintrip_SZ_HEX)
 
-# Create a data frame with grid_id and the desired column
 value_df <- data.frame(
   grid_id = intersection_result$grid_id,
   TRIPS = intersection_result$TRIPS
 )
 
-# Summarize the values for each grid cell
 summarized_values <- aggregate(TRIPS ~ grid_id, value_df, sum)
 
-# Merge the summarized values back to honeycomb_grid_sf
 honeycomb_grid_sf <- merge(honeycomb_grid_sf, summarized_values, by = "grid_id", all.x = TRUE)
 
-# Create a new column "n_BS" to store the sum of TOT_TRIPS for each grid cell
 honeycomb_grid_sf$n_BS <- ifelse(!is.na(honeycomb_grid_sf$TRIPS), honeycomb_grid_sf$TRIPS, 0)
 
-# Filter out cells with a count of n_BS greater than 0
 honeycomb_count <- filter(honeycomb_grid_sf, n_BS > 0)
 ```
 
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 tmap_mode("view")
 
 map_honeycomb = tm_shape(honeycomb_count) +
@@ -700,11 +698,12 @@ map_honeycomb
 
 a)  Point Distribution within Grid Cells:
 
--   Darker tones for points in the grid cells at CBD area, which indicates higher activity during the weekday morning peak for the period from 6am to 9am.
-
+-   Darker tones for points in the grid cells at (Jurong point - 1251: 397,834) and (Causeway point - 2411: 305,997), which indicates higher activity during the weekday morning peak for the period from 6am to 9am. This could be due to both locations being the interchange where most commuters started their journey from various parts of Jurong and Woodlands.
+-   It is also interesting to note that there are commuters travelling from Johor Bahru (CIQ / Larkin Sentral) towards Singapore (probably to work).
+-   The other notable fact is there were not many commuters that started of their trip from CBD area (e.g. Raffles place - 3290: 4,778). This could be due to the low number of residential blocks. 
 b)  Clustered Points:
 
--   Clustered grid cells at CBD area suggests localized hotspot.
+-   Small cluster near at the Clementi area (2024 & 2054) suggests localized hotspot. It could be an area where there are buses for commuters to travel to town as well as towards the Western part of Singapore.
 -   No data at grid cells which are located at Changi airport and water catchment areas.
 
 c)  Spatial Correlation:
