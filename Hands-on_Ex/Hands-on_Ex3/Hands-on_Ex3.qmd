@@ -273,3 +273,55 @@ tm_shape() +
            n = 6,
            alpha = 0.3)
 ```
+
+### 15.7 Visualising at the hexagon level
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+area_honeycomb_grid <- st_make_grid(flowLine, c(500, 500), what = "polygons", square = FALSE)
+
+honeycomb_grid_sf <- st_sf(area_honeycomb_grid) %>%
+  mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
+
+intersection_result <- st_intersection(honeycomb_grid_sf, flowLine)
+
+value_df <- data.frame(
+  grid_id = intersection_result$grid_id,
+  TRIPS = intersection_result$MORNING_PEAK
+)
+
+summarized_values <- aggregate(TRIPS ~ grid_id, value_df, sum)
+
+honeycomb_grid_sf <- merge(honeycomb_grid_sf, summarized_values, by = "grid_id", all.x = TRUE)
+
+honeycomb_grid_sf$n_BS <- ifelse(!is.na(honeycomb_grid_sf$TRIPS), honeycomb_grid_sf$TRIPS, 0)
+
+honeycomb_count <- filter(honeycomb_grid_sf, n_BS > 0)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+tmap_mode("view")
+
+map_honeycomb = tm_shape(honeycomb_count) +
+  tm_fill(
+    col = "n_BS",
+    palette = "Reds",
+    style = "cont",
+    title = "Distribution of the passenger trips",
+    id = "grid_id",
+    showNA = FALSE,
+    alpha = 0.6,
+    popup.vars = c(
+      "Distribution of the passenger trips: " = "n_BS"
+    ),
+    popup.format = list(
+      n_BS = list(format = "f", digits = 0)
+    )
+  ) +
+  tm_borders(col = "grey40", lwd = 0.7)
+
+map_honeycomb
+```
