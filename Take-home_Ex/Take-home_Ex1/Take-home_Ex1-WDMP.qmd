@@ -114,7 +114,6 @@ origin_WDMP_6_9 <- odbus1023 %>%
   summarise(TRIPS = sum(TOTAL_TRIPS))
 ```
 
-
 View the top few rows of the summarized trips by ORIGIN_PT_CODE.
 
 ```{r}
@@ -247,7 +246,6 @@ duplicate_HEX <- origin_SZ_HEX %>%
   ungroup()
 ```
 
-
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
@@ -256,7 +254,6 @@ duplicate <- origin_SZ %>%
   filter(n()>1) %>%
   ungroup()
 ```
-
 
 See if any duplicate records.
 
@@ -280,7 +277,6 @@ As shown above, there is none. Nonetheless, we can remove duplicate records (if 
 origin_SZ_HEX <- unique(origin_SZ_HEX)
 ```
 
-
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
@@ -296,6 +292,7 @@ origintrip_SZ_HEX <- left_join(BusStop,
                            origin_SZ_HEX,
                            by = c("BUS_STOP_N" = "ORIGIN_BS"))
 ```
+
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
@@ -311,14 +308,12 @@ non_finite_indices <- which(!is.finite(origintrip_SZ_HEX$TRIPS))
 origintrip_SZ_HEX$TRIPS[!is.finite(origintrip_SZ_HEX$TRIPS)] <- 0
 ```
 
-
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
 non_finite_indices <- which(!is.finite(origintrip_SZ$TOT_TRIPS))
 origintrip_SZ$TOT_TRIPS[!is.finite(origintrip_SZ$TOT_TRIPS)] <- 0
 ```
-
 
 ## 6 Choropleth Visualisation
 
@@ -342,6 +337,7 @@ tm_shape(origintrip_SZ_HEX)+
   tm_credits("Source: Planning Sub-zone boundary from URA\n and Passenger trips data from LTA", 
              position = c("left", "bottom"))
 ```
+
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
@@ -646,7 +642,7 @@ tm_shape(lisa_sig) +
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-area_honeycomb_grid <- st_make_grid(origintrip_SZ_HEX, c(500, 500), what = "polygons", square = FALSE)
+area_honeycomb_grid <- st_make_grid(origintrip_SZ_HEX, c(250, 250), what = "polygons", square = FALSE)
 
 honeycomb_grid_sf <- st_sf(area_honeycomb_grid) %>%
   mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
@@ -667,13 +663,12 @@ honeycomb_grid_sf$n_BS <- ifelse(!is.na(honeycomb_grid_sf$TRIPS), honeycomb_grid
 honeycomb_count <- filter(honeycomb_grid_sf, n_BS > 0)
 ```
 
-
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
 tmap_mode("view")
 
-map_honeycomb = tm_shape(honeycomb_count) +
+tm_shape(honeycomb_count) +
   tm_fill(
     col = "n_BS",
     palette = "Reds",
@@ -691,16 +686,16 @@ map_honeycomb = tm_shape(honeycomb_count) +
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
 
-map_honeycomb
 ```
 
 ## 10 Describe the spatial patterns revealed by the geovisualisation
 
 a)  Point Distribution within Grid Cells:
 
--   Darker tones for points in the grid cells at (Jurong point - 1251: 397,834) and (Causeway point - 2411: 305,997), which indicates higher activity during the weekday morning peak for the period from 6am to 9am. This could be due to both locations being the interchange where most commuters started their journey from various parts of Jurong and Woodlands.
+-   Darker tones for points in the grid cells at (Jurong point - 4982: 357,043) and (Causeway point - 9471: 288,423), which indicates higher activity during the weekday morning peak for the period from 6am to 9am. This could be due to both locations being the interchange where most commuters started their journey from various parts of Jurong and Woodlands.
 -   It is also interesting to note that there are commuters travelling from Johor Bahru (CIQ / Larkin Sentral) towards Singapore (probably to work).
--   The other notable fact is there were not many commuters that started of their trip from CBD area (e.g. Raffles place - 3290: 4,778). This could be due to the low number of residential blocks. 
+-   The other notable fact is there were not many commuters that started of their trip from CBD area (e.g. Raffles place - 13027: 4,070). This could be due to the low number of residential blocks.
+
 b)  Clustered Points:
 
 -   Small cluster near at the Clementi area (2024 & 2054) suggests localized hotspot. It could be an area where there are buses for commuters to travel to town as well as towards the Western part of Singapore.
