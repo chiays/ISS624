@@ -295,14 +295,12 @@ origintrip_SZ <- left_join(mpsz,
                            by = c("SUBZONE_C" = "ORIGIN_SZ"))
 ```
 
-
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
 non_finite_indices <- which(!is.finite(origintrip_SZ_HEX$TRIPS))
 origintrip_SZ_HEX$TRIPS[!is.finite(origintrip_SZ_HEX$TRIPS)] <- 0
 ```
-
 
 ```{r}
 #| code-fold: true
@@ -614,13 +612,12 @@ tm_shape(lisa_sig) +
   tm_borders(alpha = 0.4)
 ```
 
-
 ### 9.6 Visualising at the hexagon level
 
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-area_honeycomb_grid <- st_make_grid(origintrip_SZ_HEX, c(500, 500), what = "polygons", square = FALSE)
+area_honeycomb_grid <- st_make_grid(origintrip_SZ_HEX, c(250, 250), what = "polygons", square = FALSE)
 
 honeycomb_grid_sf <- st_sf(area_honeycomb_grid) %>%
   mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
@@ -641,13 +638,12 @@ honeycomb_grid_sf$n_BS <- ifelse(!is.na(honeycomb_grid_sf$TRIPS), honeycomb_grid
 honeycomb_count <- filter(honeycomb_grid_sf, n_BS > 0)
 ```
 
-
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
 tmap_mode("view")
 
-map_honeycomb = tm_shape(honeycomb_count) +
+tm_shape(honeycomb_count) +
   tm_fill(
     col = "n_BS",
     palette = "Reds",
@@ -665,16 +661,15 @@ map_honeycomb = tm_shape(honeycomb_count) +
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
 
-map_honeycomb
 ```
 
 ## 10 Describe the spatial patterns revealed by the geovisualisation
 
 a)  Point Distribution within Grid Cells:
 
--   Darker tones for points in the grid cells at (Jurong point - 1251: 110,868) and (Causeway point - 2411: 100,776), which indicates higher activity during the weekend/holiday morning peak for the period from 11am to 2pm. This could be due to both locations being the interchange where most commuters started their journey to other parts of Singapore
+-   Darker tones for points in the grid cells at (Jurong point - 4982: 103,358) and (Causeway point - 9471: 96,679), which indicates higher activity during the weekend/holiday morning peak for the period from 11am to 2pm. This could be due to both locations being the interchange where most commuters started their journey to other parts of Singapore
 -   It is also interesting to note that there are commuters travelling from Johor Bahru (CIQ / Larkin Sentral) towards Singapore (probably to work).
--   The other notable fact is that not many commuters travelled out from CBD area (e.g. Raffles place - 3290: 3,959) via bus. This could be due to less residential units at CBD.
+-   The other notable fact is that not many commuters travelled out from CBD area (e.g. Raffles place - 13027: 1,719) via bus. This could be due to less residential units at CBD.
 
 b)  Clustered Points:
 

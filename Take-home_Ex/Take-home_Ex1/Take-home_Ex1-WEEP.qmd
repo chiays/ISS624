@@ -653,9 +653,9 @@ tm_shape(honeycomb_count) +
 
 a)  Point Distribution within Grid Cells:
 
--   Darker tones for points in the grid cells at (Jurong point - 1251: 151,714) and (Causeway point - 2411: 126,815), which indicates higher activity during the weekend/holiday evening peak for the period from 4pm to 7pm. This could be due to both locations being the interchange where most commuters ended off their journey via MRT and would need to take feeder bus to various parts of Jurong and Woodlands.
+-   Darker tones for points in the grid cells at (Jurong point - 4982: 144,903) and (Causeway point - 9471: 122,000), which indicates higher activity during the weekend/holiday evening peak for the period from 4pm to 7pm. This could be due to both locations being the interchange where most commuters ended off their journey via MRT and would need to take feeder bus to various parts of Jurong and Woodlands.
 -   It is also interesting to note that there are commuters travelling from Johor Bahru (CIQ / Larkin Sentral) towards Singapore (probably to work midnight shift).
--   The other notable fact is that not many commuters travelled home from CBD area (e.g. Raffles place - 3290: 5,326) via bus. This could be due to travelling home via MRT being more convenient at CBD area. Nonetheless, data shows that more commuters took bus during the weekend evening peak as compared to the weekend morning peak in CBD area.
+-   The other notable fact is that not many commuters travelled home from CBD area (e.g. Raffles place - 13027 2,116) via bus. This could be due to travelling home via MRT being more convenient at CBD area. Nonetheless, data shows that more commuters took bus during the weekend evening peak as compared to the weekend morning peak in CBD area.
 
 b)  Clustered Points:
 
