@@ -636,7 +636,7 @@ tm_shape(lisa_sig) +
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-area_honeycomb_grid <- st_make_grid(origintrip_SZ_HEX, c(500, 500), what = "polygons", square = FALSE)
+area_honeycomb_grid <- st_make_grid(origintrip_SZ_HEX, c(250,250), what = "polygons", square = FALSE)
 
 honeycomb_grid_sf <- st_sf(area_honeycomb_grid) %>%
   mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
@@ -657,13 +657,12 @@ honeycomb_grid_sf$n_BS <- ifelse(!is.na(honeycomb_grid_sf$TRIPS), honeycomb_grid
 honeycomb_count <- filter(honeycomb_grid_sf, n_BS > 0)
 ```
 
-
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
 tmap_mode("view")
 
-map_honeycomb = tm_shape(honeycomb_count) +
+tm_shape(honeycomb_count) +
   tm_fill(
     col = "n_BS",
     palette = "Reds",
@@ -681,16 +680,15 @@ map_honeycomb = tm_shape(honeycomb_count) +
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
 
-map_honeycomb
 ```
 
 ## 10 Describe the spatial patterns revealed by the geovisualisation
 
 a)  Point Distribution within Grid Cells:
 
--   Darker tones for points in the grid cells at (Jurong point - 1251: 545,062) and (Causeway point - 2411: 473,062), which indicates higher activity during the weekday afternoon peak for the period from 5pm to 8pm. This could be due to both locations being the interchange where most commuters ended off their journey via MRT and would need to take feeder bus to various parts of Jurong and Woodlands.
+-   Darker tones for points in the grid cells at (Jurong point - 4982: 529,081) and (Causeway point - 9471: 456,703), which indicates higher activity during the weekday afternoon peak for the period from 5pm to 8pm. This could be due to both locations being the interchange where most commuters ended off their journey via MRT and would need to take feeder bus to various parts of Jurong and Woodlands.
 -   It is also interesting to note that there are commuters travelling from Johor Bahru (CIQ / Larkin Sentral) towards Singapore (probably to work midnight shift).
--   The other notable fact is that not many commuters travelled home from CBD area (e.g. Raffles place - 3290: 39,152) via bus. This could be due to travelling home via MRT being more convenient at CBD area. Nonetheless, data shows that more commuters took bus during the weekday afternoon peak as compared to the weekday morning peak in CBD area.
+-   The other notable fact is that not many commuters travelled home from CBD area (e.g. Raffles place - 13027: 18,247) via bus. This could be due to travelling home via MRT being more convenient at CBD area. Nonetheless, data shows that more commuters took bus during the weekday afternoon peak as compared to the weekday morning peak in CBD area.
 
 b)  Clustered Points:
 
