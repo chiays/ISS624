@@ -46,7 +46,9 @@ website:
           - text: Take-home Exercise 1-WEEP
             href: Take-home_Ex/Take-home_Ex1/Take-home_Ex1-WEEP.html
           - text: Take-home Exercise 2
-         
+          - text: Extra Exercise    
+            href: Take-home_Ex/Extra_Exercise/Extra_Exercise.html
+            
     right:
       - href: index.qmd
         text: Home
