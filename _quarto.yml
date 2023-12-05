@@ -35,6 +35,7 @@ website:
           - text: In-class Exercise 3
             href: In-class_Ex/In-class_Ex3/In-class_Ex3.html
 
+
       - text: Take-home Exercises
         menu: 
           - text: Take-home Exercise 1-WDMP
@@ -46,6 +47,8 @@ website:
           - text: Take-home Exercise 1-WEEP
             href: Take-home_Ex/Take-home_Ex1/Take-home_Ex1-WEEP.html
           - text: Take-home Exercise 2
+          
+          
       - text: Extra Exercise 
         menu: 
           - text: Extra_Exercise         
