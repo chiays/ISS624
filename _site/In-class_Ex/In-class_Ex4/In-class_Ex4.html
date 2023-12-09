@@ -96,6 +96,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <link rel="stylesheet" href="../../styles.css">
 </head>
@@ -199,7 +201,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../../Take-home_Ex/Take-home_Ex1/Take-home_Ex1-WEEP.html" rel="" target="">
  <span class="dropdown-text">Take-home Exercise 1-WEEP</span></a>
   </li>  
-        <li class="dropdown-header">Take-home Exercise 2</li>
+        <li>
+    <a class="dropdown-item" href="../../Take-home_Ex/Take-home_Ex2/Take-home_Ex2.html" rel="" target="">
+ <span class="dropdown-text">Take-home Exercise 2</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -240,13 +245,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#getting-started" id="toc-getting-started" class="nav-link" data-scroll-target="#getting-started">Getting Started</a></li>
+  <li><a href="#counting-number-of-schools-in-each-ura-planning-subzone" id="toc-counting-number-of-schools-in-each-ura-planning-subzone" class="nav-link" data-scroll-target="#counting-number-of-schools-in-each-ura-planning-subzone">Counting number of schools in each URA Planning Subzone</a></li>
   <li><a href="#geocoding-using-sla-api" id="toc-geocoding-using-sla-api" class="nav-link" data-scroll-target="#geocoding-using-sla-api">Geocoding using SLA API</a></li>
-  <li><a href="#converting-and-aspatial-data-into-a-simple-feature-tibble-data.frame" id="toc-converting-and-aspatial-data-into-a-simple-feature-tibble-data.frame" class="nav-link" data-scroll-target="#converting-and-aspatial-data-into-a-simple-feature-tibble-data.frame">Converting and aspatial data into a simple feature tibble data.frame</a>
-  <ul class="collapse">
-  <li><a href="#importing-and-tidying-schools-data" id="toc-importing-and-tidying-schools-data" class="nav-link" data-scroll-target="#importing-and-tidying-schools-data">Importing and tidying schools data</a></li>
-  </ul></li>
-  <li><a href="#converting-an-aspatial-data-into-sf-tibble-data.frame" id="toc-converting-an-aspatial-data-into-sf-tibble-data.frame" class="nav-link" data-scroll-target="#converting-an-aspatial-data-into-sf-tibble-data.frame">Converting an aspatial data into sf tibble data.frame</a></li>
-  <li><a href="#plotting-a-point-simple-feature-layer" id="toc-plotting-a-point-simple-feature-layer" class="nav-link" data-scroll-target="#plotting-a-point-simple-feature-layer">Plotting a point simple feature layer</a></li>
+  <li><a href="#tidying-schools-data.frame" id="toc-tidying-schools-data.frame" class="nav-link" data-scroll-target="#tidying-schools-data.frame">Tidying schools data.frame</a></li>
+  <li><a href="#performing-point-in-polygon-count-process" id="toc-performing-point-in-polygon-count-process" class="nav-link" data-scroll-target="#performing-point-in-polygon-count-process">Performing point-in-polygon count process</a></li>
+  <li><a href="#data-integration-and-final-touch-up" id="toc-data-integration-and-final-touch-up" class="nav-link" data-scroll-target="#data-integration-and-final-touch-up">Data Integration and Final Touch-up</a></li>
+  <li><a href="#checking-for-variables-with-zero-values" id="toc-checking-for-variables-with-zero-values" class="nav-link" data-scroll-target="#checking-for-variables-with-zero-values">Checking for variables with zero values</a></li>
   </ul>
 </nav>
     </div>
@@ -279,7 +284,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">December 9, 2023</p>
+      <p class="date-modified">December 10, 2023</p>
     </div>
   </div>
     
@@ -290,17 +295,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>In this in-class exercise, you will gain hands-on exercise on the following task: - performing geocoding using data downloaded from data.gov.sg - calibrating Geographical</p>
+<p>A healthy baby need healthy food. Likewise, a well calibrated Spatial Interaction Model need conceptually logical and well prepared propulsiveness and attractiveness variables. In this in-class exercise, you will gain hands-on experience on preparing propulsiveness and attractiveness variables require for calibrating spatial interaction models. By the end of this in-class exercise, you will be able to:</p>
+<ul>
+<li>perform geocoding by using SLA OneMap API,</li>
+<li>convert an aspatial data into a simple feature tibble data.frame,</li>
+<li>perform point-in-polygon count analysis, and</li>
+<li>append the propulsiveness and attractiveness variables onto a flow data.</li>
+</ul>
+</section>
+<section id="getting-started" class="level2">
+<h2 class="anchored" data-anchor-id="getting-started">Getting Started</h2>
+<p>To get start, the following R packages will be loaded into R environment. They are:</p>
+<p>tidyverse, provide a family of modern R packages for data import, wrangling</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tmap, sf, tidyverse, httr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, sf, httr,</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>               tmap)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="counting-number-of-schools-in-each-ura-planning-subzone" class="level2">
+<h2 class="anchored" data-anchor-id="counting-number-of-schools-in-each-ura-planning-subzone">Counting number of schools in each URA Planning Subzone</h2>
+<p>Downloading General information of schools data from data.gov.sg To get started, you are required to download General information of schools data set of School Directory and Information from data.gov.sg.</p>
+<p>Important We assume that the downloaded School Directory and Information is placed in a sub-folder called data/aspatial/).</p>
 </section>
 <section id="geocoding-using-sla-api" class="level2">
 <h2 class="anchored" data-anchor-id="geocoding-using-sla-api">Geocoding using SLA API</h2>
+<p>Address geocoding, or simply geocoding, is the process of taking a aspatial description of a location, such as an address or postcode, and returning geographic coordinates, frequently latitude/longitude pair, to identify a location on the Earth’s surface.</p>
+<p>Singapore Land Authority (SLA) supports an online geocoding service called OneMap API. The Search API looks up the address data or 6-digit postal code for an entered value. It then returns both latitude, longitude and x,y coordinates of the searched location.</p>
+<p>The code chunks below will perform geocoding using SLA OneMap API. The input data will be in csv file format. It will be read into R Studio environment using read_csv function of readr package. A collection of http call functions of httr package of R will then be used to pass the individual records to the geocoding server at OneMap.</p>
+<p>Two tibble data.frames will be created if the geocoding process completed successfully. They are called found and not_found. found contains all records that are geocoded correctly and not_found contains postal that failed to be geocoded.</p>
+<p>Lastly, the found data table will joined with the initial csv data table by using a unique identifier (i.e.&nbsp;POSTAL) common to both data tables. The output data table will then save as an csv file called found.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">"https://www.onemap.gov.sg/api/common/elastic/search"</span></span>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>url<span class="ot">&lt;-</span><span class="st">"https://www.onemap.gov.sg/api/common/elastic/search"</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>csv <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/aspatial/Generalinformationofschools.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>csv<span class="ot">&lt;-</span><span class="fu">read_csv</span>(<span class="st">"data/aspatial/Generalinformationofschools.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Rows: 346 Columns: 31
 ── Column specification ────────────────────────────────────────────────────────
@@ -310,55 +337,327 @@ chr (31): school_name, url_address, address, postal_code, telephone_no, tele...
 ℹ Use `spec()` to retrieve the full column specification for this data.
 ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>postcodes <span class="ot">&lt;-</span> csv<span class="sc">$</span><span class="st">'postal_code'</span></span>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>postcodes<span class="ot">&lt;-</span>csv<span class="sc">$</span><span class="st">`</span><span class="at">postal_code</span><span class="st">`</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>found <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>not_found <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>found<span class="ot">&lt;-</span><span class="fu">data.frame</span>()</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>not_found<span class="ot">&lt;-</span><span class="fu">data.frame</span>()</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(postcode <span class="cf">in</span> postcodes){</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  query <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">'searchVal'</span><span class="ot">=</span>postcode, <span class="st">'returnGeom'</span><span class="ot">=</span><span class="st">'Y'</span>, <span class="st">'getAddrDetails'</span><span class="ot">=</span><span class="st">'Y'</span>, <span class="st">'pageNum'</span><span class="ot">=</span><span class="st">'1'</span>)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">&lt;-</span> <span class="fu">GET</span>(url, <span class="at">query =</span> query)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  query<span class="ot">&lt;-</span><span class="fu">list</span>(<span class="st">'searchVal'</span><span class="ot">=</span>postcode,<span class="st">'returnGeom'</span><span class="ot">=</span><span class="st">'Y'</span>,<span class="st">'getAddrDetails'</span><span class="ot">=</span><span class="st">'Y'</span>,<span class="st">'pageNum'</span><span class="ot">=</span><span class="st">'1'</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  res<span class="ot">&lt;-</span> <span class="fu">GET</span>(url,<span class="at">query=</span>query)</span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> ((<span class="fu">content</span>(res)<span class="sc">$</span>found)<span class="sc">!=</span><span class="dv">0</span>){</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    found <span class="ot">&lt;-</span> <span class="fu">rbind</span>(found,<span class="fu">data.frame</span>(<span class="fu">content</span>(res))[<span class="dv">4</span><span class="sc">:</span><span class="dv">13</span>])</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>((<span class="fu">content</span>(res)<span class="sc">$</span>found)<span class="sc">!=</span><span class="dv">0</span>){</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    found<span class="ot">&lt;-</span><span class="fu">rbind</span>(found,<span class="fu">data.frame</span>(<span class="fu">content</span>(res))[<span class="dv">4</span><span class="sc">:</span><span class="dv">13</span>])</span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span>{</span>
 <span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    not_found <span class="ot">=</span> <span class="fu">data.frame</span>(postcode)</span>
 <span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Next the code chunk below will be used to combine boith found and not_found data.frames into as single tibble data.frame called merged. At the same time, we will write merged and not_found tibble data.frmes into csv file format for subsequent used.</p>
+<p>Next, the code chunk below will be used to combine both found and not_found data.frames into a single tibble data.frame called merged. At the same time, we will write merged and not_found tibble data.frames into two separate csv files called schools and not_found respectively.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>merged <span class="ot">=</span> <span class="fu">merge</span>(csv, found, <span class="at">by.x =</span> <span class="st">'postal_code'</span>, <span class="at">by.y =</span> <span class="st">'results.POSTAL'</span>, <span class="at">all =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(merged, <span class="at">file =</span> <span class="st">"data/aspatial/schools.csv"</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(not_found, <span class="at">file =</span><span class="st">"data/aspatial/not_found.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(not_found, <span class="at">file =</span> <span class="st">"data/aspatial/not_found.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Do it yourself! With the help of Google Map, located the location information of the ungeocoded school by using it’s postcode. Update the results.LATITUDE and results.LONGITUDE fields of the ungeocoded record in schoolss.csv manually.</p>
+</section>
+<section id="tidying-schools-data.frame" class="level2">
+<h2 class="anchored" data-anchor-id="tidying-schools-data.frame">Tidying schools data.frame</h2>
+<p>In this sub-section, you will import schools.csv into R environment and at the same time tidying the data by selecting only the necessary fields as well as rename some fields.</p>
+<p>Do it yourself! Using the steps you learned in Hands-on Exercise 1, perform the following tasks:</p>
+<p>import schools.csv in R environment as an tibble data.frame called schools, rename results.LATITUDE and results.LONGITUDE to latitude and longitude respectively, retain only postal_code, school_name, latitude and longitude in schools tibble data.frame. Show the code chunk</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>schools <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/aspatial/schools.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">latitude =</span> <span class="st">"results.LATITUDE"</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">longitude =</span> <span class="st">"results.LONGITUDE"</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(postal_code, school_name, latitude, longitude)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>New names:
+Rows: 350 Columns: 41
+── Column specification
+──────────────────────────────────────────────────────── Delimiter: "," chr
+(36): postal_code, school_name, url_address, address, telephone_no, tele... dbl
+(5): ...1, results.X, results.Y, results.LATITUDE, results.LONGITUDE
+ℹ Use `spec()` to retrieve the full column specification for this data. ℹ
+Specify the column types or set `show_col_types = FALSE` to quiet this message.
+• `` -&gt; `...1`</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>non_finite_indices <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.finite</span>(schools<span class="sc">$</span>latitude))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>schools<span class="sc">$</span>latitude[<span class="sc">!</span><span class="fu">is.finite</span>(schools<span class="sc">$</span>latitude)] <span class="ot">&lt;-</span> <span class="fl">1.3887</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>non_finite_indices <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.finite</span>(schools<span class="sc">$</span>longitude))</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>schools<span class="sc">$</span>longitude[<span class="sc">!</span><span class="fu">is.finite</span>(schools<span class="sc">$</span>longitude)] <span class="ot">&lt;-</span> <span class="fl">103.7652</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Converting an aspatial data into sf tibble data.frame Next, you will convert schools tibble data.frame data into a simple feature tibble data.frame called schools_sf by using values in latitude and longitude fields.</p>
+<p>Refer to st_as_sf() of sf package.</p>
+<p><strong>Must code longitude first before latitude. This combines both longitude and latitude into Geometry coordinates. (crs = 4326) Subsequently (crs = 3414) converts it into metres in Singapore context.</strong></p>
+<p>Show the code chunk</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>schools_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(schools, </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>),</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">crs=</span><span class="dv">4326</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Plotting a point simple feature layer To ensure that schools sf tibble data.frame has been projected and converted correctly, you can plot the schools point data for visual inspection.</p>
+<p>First, let us import MPSZ-2019 shapefile into R environment and save it as an sf tibble data.frame called mpsz.</p>
+<p>Do it yourself! Using the step your learned in previous hands-on exercise, import MPSZ-2019 shapefile into R as sf tibble data.frame and name it mpsz.</p>
+<p>Show the code chunk</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>mpsz <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial/"</span>,</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">layer =</span> <span class="st">"MPSZ-2019"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `MPSZ-2019' from data source 
+  `C:\chiays\ISS624\In-class_Ex\In-class_Ex4\data\geospatial' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 332 features and 6 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 103.6057 ymin: 1.158699 xmax: 104.0885 ymax: 1.470775
+Geodetic CRS:  WGS 84</code></pre>
+</div>
+</div>
+<p>Do it yourself! Using the steps you learned in previous exercises, create a point symbol map showing the location of schools with OSM as the background map.</p>
+<p>Show the code chunk</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_options</span>(<span class="at">check.and.fix =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(mpsz) <span class="sc">+</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>() <span class="sc">+</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(schools_sf) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: The shape mpsz is invalid. See sf::st_is_valid</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="In-class_Ex4_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
 </div>
 </section>
-<section id="converting-and-aspatial-data-into-a-simple-feature-tibble-data.frame" class="level2">
-<h2 class="anchored" data-anchor-id="converting-and-aspatial-data-into-a-simple-feature-tibble-data.frame">Converting and aspatial data into a simple feature tibble data.frame</h2>
-<section id="importing-and-tidying-schools-data" class="level3">
-<h3 class="anchored" data-anchor-id="importing-and-tidying-schools-data">Importing and tidying schools data</h3>
-<p>In this sub-section, you will import schools.csv into R environment and at the same time tidying the data by selecting only the necessary fields as well as rename some fields.</p>
-<p>Using the steps you learned in Hands-on Exercise 1, perform the following tasks:</p>
-<ul>
-<li>import schools.csv in R environment as an tibble data-frame called schools</li>
-<li>rename results.LATITUDE and results.LONGITUDE to latitude and longitude respectively,</li>
-<li>retain only postal_code, school)name, latitude and longitude in schools tibble data.frame.</li>
-</ul>
-<p>schools &lt;- read_csv(“data/aspatial/schools.csv”) %&gt;% rename(latitude = “results.LATITUDE”, longitude = “results.LONGITUDE”) %&gt;% select(postal_code, school_name, latitude, longitude)</p>
+<section id="performing-point-in-polygon-count-process" class="level2">
+<h2 class="anchored" data-anchor-id="performing-point-in-polygon-count-process">Performing point-in-polygon count process</h2>
+<p>Next, we will count the number of schools located inside the planning subzones.</p>
+<p>Do it yourself! Using the steps you learned from previous hands-on exercises, count the number of schools within each planning subzone by using lengths() of Base and st_intersects() of sf package.</p>
+<p>Show the code chunk</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mpsz<span class="sc">$</span><span class="st">`</span><span class="at">SCHOOL_COUNT</span><span class="st">`</span><span class="ot">&lt;-</span> <span class="fu">lengths</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_intersects</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    mpsz, schools_sf))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>It is always a good practice to examine the summary statistics of the derived variable.</p>
+<p>Do it yourself! Using the steps you learned in previous exercises, compute and display the summary statistics of sch_count field.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mpsz<span class="sc">$</span>SCHOOL_COUNT)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   0.000   0.000   1.054   2.000  12.000 </code></pre>
+</div>
+</div>
+<p>Important The summary statistics above reveals that there are excessive 0 values in SCHOOL_COUNT field. If log() is going to use to transform this field, additional step is required to ensure that all 0 will be replaced with a value between 0 and 1 but not 0 neither 1.</p>
 </section>
+<section id="data-integration-and-final-touch-up" class="level2">
+<h2 class="anchored" data-anchor-id="data-integration-and-final-touch-up">Data Integration and Final Touch-up</h2>
+<p>Do it yourself! Using the steps you learned in earlier sub-sections, count the number of Business points in each planning subzone.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>business_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>,</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                      <span class="at">layer =</span> <span class="st">"Business"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Business' from data source 
+  `C:\chiays\ISS624\In-class_Ex\In-class_Ex4\data\geospatial' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 6550 features and 3 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 3669.148 ymin: 25408.41 xmax: 47034.83 ymax: 50148.54
+Projected CRS: SVY21 / Singapore TM</code></pre>
+</div>
+</div>
+<p>Show the code chunk</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_options</span>(<span class="at">check.and.fix =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(mpsz) <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>() <span class="sc">+</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(business_sf) <span class="sc">+</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: The shape mpsz is invalid. See sf::st_is_valid</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="In-class_Ex4_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Show the code chunk</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>mpsz<span class="sc">$</span><span class="st">`</span><span class="at">BUSINESS_COUNT</span><span class="st">`</span><span class="ot">&lt;-</span> <span class="fu">lengths</span>(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_intersects</span>(</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    mpsz, business_sf))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mpsz<span class="sc">$</span>BUSINESS_COUNT)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00    0.00    2.00   19.73   13.00  307.00 </code></pre>
+</div>
+</div>
+<p>Now, it is time for us to bring in the flow_data.rds saved after Hands-on Exercise 3.</p>
+<p>Show the code chunk</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>flow_data <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"data/rds/flow_data_tidy.rds"</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>flow_data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Simple feature collection with 14734 features and 12 fields
+Geometry type: LINESTRING
+Dimension:     XY
+Bounding box:  xmin: 5105.594 ymin: 25813.33 xmax: 49483.22 ymax: 49552.79
+Projected CRS: SVY21 / Singapore TM
+First 10 features:
+   ORIGIN_SZ DESTIN_SZ MORNING_PEAK      dist ORIGIN_AGE7_12 ORIGIN_AGE13_24
+1     AMSZ01    AMSZ01         1998   50.0000            310             710
+2     AMSZ01    AMSZ02         8289  810.4491            310             710
+3     AMSZ01    AMSZ03         8971 1360.9294            310             710
+4     AMSZ01    AMSZ04         2252  840.4432            310             710
+5     AMSZ01    AMSZ05         6136 1076.7916            310             710
+6     AMSZ01    AMSZ06         2148  805.2979            310             710
+7     AMSZ01    AMSZ07         1620 1798.7526            310             710
+8     AMSZ01    AMSZ08         1925 2576.0199            310             710
+9     AMSZ01    AMSZ09         1773 1204.2846            310             710
+10    AMSZ01    AMSZ10           63 1417.8035            310             710
+   ORIGIN_AGE25_64 DESTIN_AGE7_12 DESTIN_AGE13_24 DESTIN_AGE25_64 SCHOOL_COUNT
+1             2780         310.00          710.00         2780.00         0.99
+2             2780        1140.00         2770.00        15700.00         2.00
+3             2780        1010.00         2650.00        14240.00         2.00
+4             2780         980.00         2000.00        11320.00         1.00
+5             2780         810.00         1920.00         9650.00         3.00
+6             2780        1050.00         2390.00        12460.00         2.00
+7             2780         420.00         1120.00         3620.00         0.99
+8             2780         390.00         1150.00         4350.00         0.99
+9             2780        1190.00         3260.00        13350.00         3.00
+10            2780           0.99            0.99            0.99         1.00
+   RETAIL_COUNT                       geometry
+1          1.00 LINESTRING (29501.77 39419....
+2          0.99 LINESTRING (29501.77 39419....
+3          6.00 LINESTRING (29501.77 39419....
+4          0.99 LINESTRING (29501.77 39419....
+5          0.99 LINESTRING (29501.77 39419....
+6          0.99 LINESTRING (29501.77 39419....
+7          1.00 LINESTRING (29501.77 39419....
+8        117.00 LINESTRING (29501.77 39419....
+9          0.99 LINESTRING (29501.77 39419....
+10        20.00 LINESTRING (29501.77 39419....</code></pre>
+</div>
+</div>
+<p>Notice that this is an sf tibble data.frame and the features are polylines linking the centroid of origins and destination planning subzone.</p>
+<p>Do it yourself Using the steps your learned in Hands-on Exercise 3, append SCHOOL_COUNT and BUSINESS_COUNT into flow_data sf tibble data.frame.</p>
+<p>Show the code chunk</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>mpsz_tidy <span class="ot">&lt;-</span> mpsz <span class="sc">%&gt;%</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(SUBZONE_C, SCHOOL_COUNT, BUSINESS_COUNT)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now, we will append SCHOOL_COUNT and BUSINESS_COUNT fields from mpsz_tidy data.frame into flow_data sf tibble data.frame by using the code chunk below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>flow_data <span class="ot">&lt;-</span> flow_data <span class="sc">%&gt;%</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(mpsz_tidy,</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"DESTIN_SZ"</span> <span class="ot">=</span> <span class="st">"SUBZONE_C"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">TRIPS =</span> MORNING_PEAK,</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">DIST =</span> dist)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Important Note that the unique join field used is DESTIN_SZ of flow_data and SUBZONE_C of mpsz_tidy. Do you know why?</p>
 </section>
-<section id="converting-an-aspatial-data-into-sf-tibble-data.frame" class="level2">
-<h2 class="anchored" data-anchor-id="converting-an-aspatial-data-into-sf-tibble-data.frame">Converting an aspatial data into sf tibble data.frame</h2>
-<p>Next you will convert the aspatial data into a simple feature tibble data.frame called schools_sf.</p>
-<p>Refer to st_as_sf() of sf package. Must code longitude first before latitude. This combines both longitude and latitude into Geometry coordinates. (crs = 4326) Subsequently (crs = 3414) converts it into metres in Singapore context.</p>
-<p>schools_sf &lt;- st_as_sf(schools, coords = c(“longitude”, “latitude”), crs=4326) %&gt;% st_transform(crs = 3414)</p>
-</section>
-<section id="plotting-a-point-simple-feature-layer" class="level2">
-<h2 class="anchored" data-anchor-id="plotting-a-point-simple-feature-layer">Plotting a point simple feature layer</h2>
-<p>To ensure that schools sf tibble data.frame has been projected and converted correctly you can plot the schools point data for visual inspection.</p>
-<p>Using the steps you learned in previous exercises, create a point symbol map showing the location of schools.</p>
-<p>tmap_mode(“view”) tm_shape(schools_sf) + tm_dots() + tm_view(set.zoom.limits - c(11,14)) tmap_mode(“plot”)</p>
-<p>mpsz$`SCHOOL_COUNT’) &lt;-</p>
+<section id="checking-for-variables-with-zero-values" class="level2">
+<h2 class="anchored" data-anchor-id="checking-for-variables-with-zero-values">Checking for variables with zero values</h2>
+<p>Since Poisson Regression is based of log and log 0 is undefined, it is important for us to ensure that no 0 values in the explanatory variables.</p>
+<p>In the code chunk below, summary() of Base R is used to compute the summary statistics of all variables in wd_od data frame.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(flow_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  ORIGIN_SZ          DESTIN_SZ             TRIPS             DIST      
+ Length:14734       Length:14734       Min.   :     1   Min.   :   50  
+ Class :character   Class :character   1st Qu.:    14   1st Qu.: 3346  
+ Mode  :character   Mode  :character   Median :    76   Median : 6067  
+                                       Mean   :  1021   Mean   : 6880  
+                                       3rd Qu.:   426   3rd Qu.: 9729  
+                                       Max.   :232187   Max.   :26136  
+ ORIGIN_AGE7_12    ORIGIN_AGE13_24    ORIGIN_AGE25_64    DESTIN_AGE7_12   
+ Min.   :   0.99   Min.   :    0.99   Min.   :    0.99   Min.   :   0.99  
+ 1st Qu.: 240.00   1st Qu.:  440.00   1st Qu.: 2200.00   1st Qu.: 240.00  
+ Median : 700.00   Median : 1350.00   Median : 6810.00   Median : 720.00  
+ Mean   :1031.86   Mean   : 2268.84   Mean   :10487.62   Mean   :1033.40  
+ 3rd Qu.:1480.00   3rd Qu.: 3260.00   3rd Qu.:15770.00   3rd Qu.:1500.00  
+ Max.   :6340.00   Max.   :16380.00   Max.   :74610.00   Max.   :6340.00  
+ DESTIN_AGE13_24    DESTIN_AGE25_64    SCHOOL_COUNT.x    RETAIL_COUNT   
+ Min.   :    0.99   Min.   :    0.99   Min.   : 0.990   Min.   :  0.99  
+ 1st Qu.:  460.00   1st Qu.: 2200.00   1st Qu.: 0.990   1st Qu.:  0.99  
+ Median : 1420.00   Median : 7030.00   Median : 1.000   Median :  3.00  
+ Mean   : 2290.35   Mean   :10574.46   Mean   : 1.987   Mean   : 16.47  
+ 3rd Qu.: 3260.00   3rd Qu.:15830.00   3rd Qu.: 2.000   3rd Qu.: 12.00  
+ Max.   :16380.00   Max.   :74610.00   Max.   :12.000   Max.   :307.00  
+ SCHOOL_COUNT.y   BUSINESS_COUNT            geometry    
+ Min.   : 0.000   Min.   :  0.00   LINESTRING   :14734  
+ 1st Qu.: 0.000   1st Qu.:  0.00   epsg:3414    :    0  
+ Median : 1.000   Median :  3.00   +proj=tmer...:    0  
+ Mean   : 1.583   Mean   : 16.17                        
+ 3rd Qu.: 2.000   3rd Qu.: 12.00                        
+ Max.   :12.000   Max.   :307.00                        </code></pre>
+</div>
+</div>
+<p>The print report above reveals that variables ORIGIN_AGE7_12, ORIGIN_AGE13_24, ORIGIN_AGE25_64, DESTIN_AGE7_12, DESTIN_AGE13_24, DESTIN_AGE25_64 consist of 0 values.</p>
+<p>In view of this, code chunk below will be used to replace zero values to 0.99.</p>
+<p>==== flow_data<span class="math inline">\(SCHOOL_COUNT &lt;- ifelse(  flow_data\)</span>SCHOOL_COUNT == 0, 0.99, flow_data<span class="math inline">\(SCHOOL_COUNT) flow_data\)</span>BUSINESS_COUNT &lt;- ifelse( flow_data<span class="math inline">\(BUSINESS_COUNT == 0,  0.99, flow_data\)</span>BUSINESS_COUNT) ===</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>flow_data<span class="sc">$</span>SCHOOL_COUNT.x <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  flow_data<span class="sc">$</span>SCHOOL_COUNT.x <span class="sc">==</span> <span class="dv">0</span>,</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.99</span>, flow_data<span class="sc">$</span>SCHOOL_COUNT.x)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>flow_data<span class="sc">$</span>SCHOOL_COUNT.y <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  flow_data<span class="sc">$</span>SCHOOL_COUNT.y <span class="sc">==</span> <span class="dv">0</span>,</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.99</span>, flow_data<span class="sc">$</span>SCHOOL_COUNT.y)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>flow_data<span class="sc">$</span>BUSINESS_COUNT <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  flow_data<span class="sc">$</span>BUSINESS_COUNT <span class="sc">==</span> <span class="dv">0</span>,</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.99</span>, flow_data<span class="sc">$</span>BUSINESS_COUNT)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You can run the summary() again.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(flow_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  ORIGIN_SZ          DESTIN_SZ             TRIPS             DIST      
+ Length:14734       Length:14734       Min.   :     1   Min.   :   50  
+ Class :character   Class :character   1st Qu.:    14   1st Qu.: 3346  
+ Mode  :character   Mode  :character   Median :    76   Median : 6067  
+                                       Mean   :  1021   Mean   : 6880  
+                                       3rd Qu.:   426   3rd Qu.: 9729  
+                                       Max.   :232187   Max.   :26136  
+ ORIGIN_AGE7_12    ORIGIN_AGE13_24    ORIGIN_AGE25_64    DESTIN_AGE7_12   
+ Min.   :   0.99   Min.   :    0.99   Min.   :    0.99   Min.   :   0.99  
+ 1st Qu.: 240.00   1st Qu.:  440.00   1st Qu.: 2200.00   1st Qu.: 240.00  
+ Median : 700.00   Median : 1350.00   Median : 6810.00   Median : 720.00  
+ Mean   :1031.86   Mean   : 2268.84   Mean   :10487.62   Mean   :1033.40  
+ 3rd Qu.:1480.00   3rd Qu.: 3260.00   3rd Qu.:15770.00   3rd Qu.:1500.00  
+ Max.   :6340.00   Max.   :16380.00   Max.   :74610.00   Max.   :6340.00  
+ DESTIN_AGE13_24    DESTIN_AGE25_64    SCHOOL_COUNT.x    RETAIL_COUNT   
+ Min.   :    0.99   Min.   :    0.99   Min.   : 0.990   Min.   :  0.99  
+ 1st Qu.:  460.00   1st Qu.: 2200.00   1st Qu.: 0.990   1st Qu.:  0.99  
+ Median : 1420.00   Median : 7030.00   Median : 1.000   Median :  3.00  
+ Mean   : 2290.35   Mean   :10574.46   Mean   : 1.987   Mean   : 16.47  
+ 3rd Qu.: 3260.00   3rd Qu.:15830.00   3rd Qu.: 2.000   3rd Qu.: 12.00  
+ Max.   :16380.00   Max.   :74610.00   Max.   :12.000   Max.   :307.00  
+ SCHOOL_COUNT.y   BUSINESS_COUNT            geometry    
+ Min.   : 0.990   Min.   :  0.99   LINESTRING   :14734  
+ 1st Qu.: 0.990   1st Qu.:  0.99   epsg:3414    :    0  
+ Median : 1.000   Median :  3.00   +proj=tmer...:    0  
+ Mean   : 1.987   Mean   : 16.47                        
+ 3rd Qu.: 2.000   3rd Qu.: 12.00                        
+ Max.   :12.000   Max.   :307.00                        </code></pre>
+</div>
+</div>
+<p>Notice that all the 0 values have been replaced by 0.99.</p>
+<p>Before we move on to calibrate the Spatial Interaction Models, let us save flow_data sf tibble data.frame into an rds file. Call the file flow_data_tidy.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(flow_data,</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>          <span class="st">"data/rds/flow_data_tidy.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 
 
 </section>
