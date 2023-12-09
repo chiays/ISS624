@@ -1,8 +1,77 @@
 ---
-title: "In-class_Ex4"
+title: "In-class_Ex4: GeoSpatial Data Science with R"
 author: "Chia Yong Soon"
 date: "09 Dec 2023"
 date-modified: "last-modified"
 ---
 
-Test
+## Overview
+
+In this in-class exercise, you will gain hands-on exercise on the following task: - performing geocoding using data downloaded from data.gov.sg - calibrating Geographical
+
+```{r}
+pacman::p_load(tmap, sf, tidyverse, httr)
+```
+
+## Geocoding using SLA API
+
+```{r}
+url <- "https://www.onemap.gov.sg/api/common/elastic/search"
+
+csv <- read_csv("data/aspatial/Generalinformationofschools.csv")
+postcodes <- csv$'postal_code'
+
+found <- data.frame()
+not_found <- data.frame()
+
+for(postcode in postcodes){
+  query <- list('searchVal'=postcode, 'returnGeom'='Y', 'getAddrDetails'='Y', 'pageNum'='1')
+  res <- GET(url, query = query)
+  
+  if ((content(res)$found)!=0){
+    found <- rbind(found,data.frame(content(res))[4:13])
+  } else{
+    not_found = data.frame(postcode)
+  }
+}
+```
+
+Next the code chunk below will be used to combine boith found and not_found data.frames into as single tibble data.frame called merged. At the same time, we will write merged and not_found tibble data.frmes into csv file format for subsequent used.
+
+```{r}
+merged = merge(csv, found, by.x = 'postal_code', by.y = 'results.POSTAL', all = TRUE)
+write.csv(merged, file = "data/aspatial/schools.csv")
+write.csv(not_found, file ="data/aspatial/not_found.csv")
+```
+
+## Converting and aspatial data into a simple feature tibble data.frame
+
+### Importing and tidying schools data
+
+In this sub-section, you will import schools.csv into R environment and at the same time tidying the data by selecting only the necessary fields as well as rename some fields.
+
+Using the steps you learned in Hands-on Exercise 1, perform the following tasks:
+
+-   import schools.csv in R environment as an tibble data-frame called schools
+-   rename results.LATITUDE and results.LONGITUDE to latitude and longitude respectively,
+-   retain only postal_code, school)name, latitude and longitude in schools tibble data.frame.
+
+schools \<- read_csv("data/aspatial/schools.csv") %\>% rename(latitude = "results.LATITUDE", longitude = "results.LONGITUDE") %\>% select(postal_code, school_name, latitude, longitude)
+
+## Converting an aspatial data into sf tibble data.frame
+
+Next you will convert the aspatial data into a simple feature tibble data.frame called schools_sf.
+
+Refer to st_as_sf() of sf package. Must code longitude first before latitude. This combines both longitude and latitude into Geometry coordinates. (crs = 4326) Subsequently (crs = 3414) converts it into metres in Singapore context.
+
+schools_sf \<- st_as_sf(schools, coords = c("longitude", "latitude"), crs=4326) %\>% st_transform(crs = 3414)
+
+## Plotting a point simple feature layer
+
+To ensure that schools sf tibble data.frame has been projected and converted correctly you can plot the schools point data for visual inspection.
+
+Using the steps you learned in previous exercises, create a point symbol map showing the location of schools.
+
+tmap_mode("view") tm_shape(schools_sf) + tm_dots() + tm_view(set.zoom.limits - c(11,14)) tmap_mode("plot")
+
+mpsz\$\`SCHOOL_COUNT') \<-
