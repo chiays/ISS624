@@ -651,9 +651,9 @@ tm_shape() +
            alpha = 0.3)
 ```
 
-
 ## **9 Geocoding using SLA API**
-Address geocoding, or simply geocoding, is the process of taking a aspatial description of a location, such as an address or postcode, and returning geographic coordinates, frequently latitude/longitude pair, to identify a location on the Earth’s surface.
+
+Address geocoding, or simply geocoding, is the process of taking a aspatial description of a location, such as an address or postcode, and returning geographic coordinates, frequently latitude/longitude pair, to identify a location on the Earth's surface.
 
 Singapore Land Authority (SLA) supports an online geocoding service called OneMap API. The Search API looks up the address data or 6-digit postal code for an entered value. It then returns both latitude, longitude and x,y coordinates of the searched location.
 
@@ -663,27 +663,17 @@ Two tibble data.frames will be created if the geocoding process completed succes
 
 Lastly, the found data table will joined with the initial csv data table by using a unique identifier (i.e. POSTAL) common to both data tables. The output data table will then save as an csv file called found.
 
-=======================
-url<-"https://www.onemap.gov.sg/api/common/elastic/search"
+======================= url\<-"https://www.onemap.gov.sg/api/common/elastic/search"
 
-csv<-read_csv("data/aspatial/Generalinformationofschools.csv")
+csv\<-read_csv("data/aspatial/Generalinformationofschools.csv")
 
-postcodes<-csv$`postal_code`
+postcodes\<-csv\$`postal_code`
 
-found<-data.frame()
-not_found<-data.frame()
+found\<-data.frame() not_found\<-data.frame()
 
-for(postcode in postcodes){
-  query<-list('searchVal'=postcode,'returnGeom'='Y','getAddrDetails'='Y','pageNum'='1')
-  res<- GET(url,query=query)
-  
-  if((content(res)$found)!=0){
-    found<-rbind(found,data.frame(content(res))[4:13])
-  } else{
-    not_found = data.frame(postcode)
-  }
-}
-=======================
+for(postcode in postcodes){ query\<-list('searchVal'=postcode,'returnGeom'='Y','getAddrDetails'='Y','pageNum'='1') res\<- GET(url,query=query)
+
+if((content(res)\$found)!=0){ found\<-rbind(found,data.frame(content(res))\[4:13\]) } else{ not_found = data.frame(postcode) } } =======================
 
 Since we have done it during in-class ex4, we just need to read the csv that was prepared.
 
@@ -695,6 +685,7 @@ schools <- read_csv("data/aspatial/schools.csv") %>%
          longitude = "results.LONGITUDE")%>%
   select(postal_code, school_name, latitude, longitude)
 ```
+
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
@@ -705,7 +696,6 @@ non_finite_indices <- which(!is.finite(schools$longitude))
 schools$longitude[!is.finite(schools$longitude)] <- 103.7652
 ```
 
-
 Converting an aspatial data into sf tibble data.frame Next, convert schools tibble data.frame data into a simple feature tibble data.frame called schools_sf by using values in latitude and longitude fields.
 
 Refer to st_as_sf() of sf package.
@@ -713,6 +703,7 @@ Refer to st_as_sf() of sf package.
 Must code longitude first before latitude. This combines both longitude and latitude into Geometry coordinates. (crs = 4326) Subsequently (crs = 3414) converts it into metres in Singapore context.
 
 Show the code chunk
+
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
@@ -734,12 +725,11 @@ tm_shape(schools_sf) +
   tm_dots()
 ```
 
-
 ## **10 Performing point-in-polygon count process**
 
 Next, we will count the number of schools located inside the planning subzones.
 
-Do it yourself! Using the steps you learned from previous hands-on exercises, count the number of schools within each planning subzone by using lengths() of Base and st_intersects() of sf package.
+Count the number of schools within each planning subzone by using lengths() of Base and st_intersects() of sf package.
 
 Show the code chunk
 
@@ -751,7 +741,7 @@ mpsz$`SCHOOL_COUNT`<- lengths(
     mpsz, schools_sf))
 ```
 
-Using the steps you learned in previous exercises, compute and display the summary statistics of sch_count field.
+Compute and display the summary statistics of sch_count field.
 
 ```{r}
 #| code-fold: true
@@ -759,7 +749,7 @@ Using the steps you learned in previous exercises, compute and display the summa
 summary(mpsz$SCHOOL_COUNT)
 ```
 
-he summary statistics above reveals that there are excessive 0 values in SCHOOL_COUNT field. If log() is going to use to transform this field, additional step is required to ensure that all 0 will be replaced with a value between 0 and 1 but not 0 neither 1.
+The summary statistics above reveals that there are excessive 0 values in SCHOOL_COUNT field. If log() is going to be used to transform this field, additional step is required to ensure that all 0 will be replaced with a value between 0 and 1 but neither 0 nor 1.
 
 ## **11 Data Integration and Final Touch-up**
 
@@ -770,6 +760,28 @@ Using the steps you learned in earlier sub-sections, count the number of Busines
 #| code-summary: "Show the code"
 business_sf <- st_read(dsn = "data/geospatial",
                       layer = "Business")
+```
+
+Next, we will count the number of business located inside the planning subzones.
+
+Count the number of schools within each planning subzone by using lengths() of Base and st_intersects() of sf package.
+
+Show the code chunk
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+mpsz$`BUSINESS_COUNT`<- lengths(
+  st_intersects(
+    mpsz, business_sf))
+```
+
+Compute and display the summary statistics of sch_count field.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+summary(mpsz$BUSINESS_COUNT)
 ```
 
 ```{r}
@@ -808,10 +820,13 @@ flow_data <- read_rds("data/rds/flow_data_tidy.rds") %>%
 
 ```
 
-================
-flow_data <- subset(flow_data, select = -SCHOOL_COUNT.y)
-flow_data
-================
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+flow_data$`BUSINESS_COUNT`<- lengths(
+  st_intersects(
+    flow_data, mpsz))
+```
 
 ## **12 Calibrating Spatial Interaction Models with R**
 
@@ -819,10 +834,10 @@ Spatial Interaction Models (SIMs) are mathematical models for estimating flows b
 
 There are four main types of traditional SIMs (Wilson 1971):
 
-- Unconstrained
-- Production-constrained
-- Attraction-constrained
-- Doubly-constrained
+-   Unconstrained
+-   Production-constrained
+-   Attraction-constrained
+-   Doubly-constrained
 
 Ordinary least square (OLS), log-normal, Poisson and negative binomial (NB) regression methods have been used extensively to calibrate OD flow models by processing flow data as different types of dependent variables. In this chapter, you will gain hands-on experiences on using appropriate R packages to calibrate SIM by using there four regression methods.
 
@@ -830,9 +845,9 @@ Ordinary least square (OLS), log-normal, Poisson and negative binomial (NB) regr
 
 We are going to calibrate SIM to determine factors affecting the public bus passenger flows during the morning peak in Singapore. The four r packages that will be used are:
 
-- sf for importing, integrating, processing and transforming geospatial data.
-- tidyverse for importing, integrating, wrangling and visualising data.
-- tmap for creating thematic maps.
+-   sf for importing, integrating, processing and transforming geospatial data.
+-   tidyverse for importing, integrating, wrangling and visualising data.
+-   tmap for creating thematic maps.
 
 Additional R packages will be loaded.
 
@@ -841,15 +856,14 @@ Additional R packages will be loaded.
 #| code-summary: "Show the code" 
 pacman::p_load(sp, DT, performance, reshape2, ggpubr, units)
 ```
-           
-1. DT: Purpose: The DT package is used for creating interactive tables in R Markdown documents, Shiny applications, and R scripts. It allows users to interact with the data by sorting, filtering, and exporting tables.
 
-2. reshape2: Purpose: The reshape2 package is used for data reshaping and restructuring. It provides functions like melt and dcast that help transform data between wide and long formats.
+1.  DT: Purpose: The DT package is used for creating interactive tables in R Markdown documents, Shiny applications, and R scripts. It allows users to interact with the data by sorting, filtering, and exporting tables.
 
-3. ggpubr: Purpose: The ggpubr package extends the capabilities of the popular ggplot2 package. It provides functions to create complex plots easily, including grouped boxplots, scatter plots, correlation matrices, and more.
+2.  reshape2: Purpose: The reshape2 package is used for data reshaping and restructuring. It provides functions like melt and dcast that help transform data between wide and long formats.
 
-4. units: Purpose: The units package is used for working with physical units in R. It allows to attach units to numeric values and perform arithmetic operations while taking units into account. This is useful in scientific and engineering applications.  
+3.  ggpubr: Purpose: The ggpubr package extends the capabilities of the popular ggplot2 package. It provides functions to create complex plots easily, including grouped boxplots, scatter plots, correlation matrices, and more.
 
+4.  units: Purpose: The units package is used for working with physical units in R. It allows to attach units to numeric values and perform arithmetic operations while taking units into account. This is useful in scientific and engineering applications.
 
 ## **14 Computing Distance Matrix**
 
@@ -899,7 +913,6 @@ colnames(dist) <- paste0(sz_names)
 rownames(dist) <- paste0(sz_names)
 ```
 
-
 ### Pivoting distance value by SUBZONE_C
 
 Pivot the distance matrix into a long table by using the row and column subzone codes as show in the code chunk below.
@@ -911,12 +924,12 @@ distPair <- melt(dist) %>%
   rename(dist = value)
 head(distPair, 10)
 ```
+
 Notice that within zone distance is 0.
 
 ### Updating intra-zonal distances
 
-We shall append a constant value to replace the intra-zonal distance of 0.
-First, we will select and find out the minimum value of the distance by using summary().
+We shall append a constant value to replace the intra-zonal distance of 0. First, we will select and find out the minimum value of the distance by using summary().
 
 ```{r}
 #| code-fold: true 
@@ -943,6 +956,7 @@ The code chunk below will be used to check the result data.frame.
 distPair %>%
   summary()
 ```
+
 The code chunk below is used to rename the origin and destination fields.
 
 ```{r}
@@ -951,8 +965,8 @@ The code chunk below is used to rename the origin and destination fields.
 distPair <- distPair %>%
   rename(orig = Var1,
          dest = Var2)
-```         
-     
+```
+
 Lastly, the code chunk below is used to save the dataframe for future use.
 
 ```{r}
@@ -960,7 +974,6 @@ Lastly, the code chunk below is used to save the dataframe for future use.
 #| code-summary: "Show the code"
 write_rds(distPair, "data/rds/distPair.rds") 
 ```
-
 
 ## **15 Separating intra-flow from passenger volume df**
 
@@ -977,6 +990,16 @@ flow_data$offset <- ifelse(
   0.000001, 1)
 ```
 
+According to the syntax used to derive values in FlowNoIntra field, all intra-zonal flow will be given a value of 0 or else the original flow values will be inserted.
+
+Next, inter-zonal flow will be selected from flow_data and save into a new output data.frame called inter_zonal_flow by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+inter_zonal_flow <- flow_data %>%
+  filter(FlowNoIntra > 0)
+```
 
 ## **16 Combining passenger volume data with distance value**
 
@@ -999,7 +1022,6 @@ flow_data1 <- flow_data %>%
              by = c("ORIGIN_SZ" = "orig",
                     "DESTIN_SZ" = "dest"))
 ```
-
 
 ## **17 Preparing Origin and Destination Attributes**
 
@@ -1031,7 +1053,7 @@ flow_data1 <- flow_data1 %>%
 
 ```
 
-#### 16.7.4 Preparing destination attribute
+#### Preparing destination attribute
 
 ```{r}
 flow_data1 <- flow_data1 %>%
@@ -1068,6 +1090,8 @@ SIM_data <- SIM_data %>%
 #### Visualising the dependent variable Firstly, let us plot the distribution of the dependent variable (i.e. TRIPS) by using histogram method by using the code chunk below.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 ggplot(data = SIM_data,
        aes(x = TRIPS)) +
   geom_histogram()
@@ -1078,6 +1102,8 @@ Notice that the distribution is highly skewed and not resemble bell shape or als
 Next, let us visualise the relation between the dependent variable and one of the key independent variable in Spatial Interaction Model, namely distance.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 ggplot(data = SIM_data,
        aes(x = dist,
            y = TRIPS)) +
@@ -1090,6 +1116,8 @@ Notice that their relationship hardly resemble linear relationship.
 On the other hand, if we plot the scatter plot by using the log transformed version of both variables, we can see that their relationship is more resemble linear relationship.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 ggplot(data = SIM_data,
        aes(x = log(dist),
            y = log(TRIPS))) +
@@ -1104,6 +1132,8 @@ Since Poisson Regression is based of log and log 0 is undefined, it is important
 In the code chunk below, summary() of Base R is used to compute the summary statistics of all variables in SIM_data data frame.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 summary(SIM_data)
 ```
 
@@ -1112,6 +1142,8 @@ The print report above reveals that variables ORIGIN_AGE7_12, ORIGIN_AGE13_24, O
 In view of this, code chunk below will be used to replace zero values to 0.99.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 SIM_data$DESTIN_AGE7_12 <- ifelse(
   SIM_data$DESTIN_AGE7_12 == 0,
   0.99, SIM_data$DESTIN_AGE7_12)
@@ -1130,11 +1162,16 @@ SIM_data$ORIGIN_AGE13_24 <- ifelse(
 SIM_data$ORIGIN_AGE25_64 <- ifelse(
   SIM_data$ORIGIN_AGE25_64 == 0,
   0.99, SIM_data$ORIGIN_AGE25_64)
+SIM_data$BUSINESS_COUNT <- ifelse(
+  SIM_data$BUSINESS_COUNT == 0,
+  0.99, SIM_data$BUSINESS_COUNT)
 ```
 
 You can run the summary() again.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 summary(SIM_data)
 ```
 
@@ -1149,6 +1186,8 @@ The general formula of Unconstrained Spatial Interaction Model
 The code chunk used to calibrate to model is shown below:
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 uncSIM <- glm(formula = TRIPS ~ 
                 log(ORIGIN_AGE25_64) + 
                 log(DESTIN_AGE25_64) +
@@ -1164,6 +1203,8 @@ uncSIM
 In order to measure how much variation of the trips can be accounted by the model we will write a function to calculate R-Squared value as shown below.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 CalcRSquared <- function(observed,estimated){
   r <- cor(observed,estimated)
   R2 <- r^2
@@ -1174,10 +1215,14 @@ CalcRSquared <- function(observed,estimated){
 Next, we will compute the R-squared of the unconstrained SIM by using the code chunk below.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 CalcRSquared(uncSIM$data$TRIPS, uncSIM$fitted.values)
 ```
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 r2_mcfadden(uncSIM)
 ```
 
@@ -1188,6 +1233,8 @@ In this section, we will fit an origin constrained SIM by using the code3 chunk 
 The general formula of Origin Constrained Spatial Interaction Model
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 orcSIM <- glm(formula = TRIPS ~ 
                  ORIGIN_SZ +
                  log(DESTIN_AGE25_64) +
@@ -1201,6 +1248,8 @@ summary(orcSIM)
 We can examine how the constraints hold for destinations this time.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 CalcRSquared(orcSIM$data$TRIPS, orcSIM$fitted.values)
 ```
 
@@ -1211,6 +1260,8 @@ In this section, we will fit a destination constrained SIM by using the code chu
 The general formula of Destination Constrained Spatial Interaction Model
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 
 decSIM <- glm(formula = TRIPS ~ 
                 DESTIN_SZ + 
@@ -1225,6 +1276,8 @@ summary(decSIM)
 We can examine how the constraints hold for destinations this time.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 CalcRSquared(decSIM$data$TRIPS, decSIM$fitted.values)
 ```
 
@@ -1235,6 +1288,8 @@ In this section, we will fit a doubly constrained SIM by using the code chunk be
 The general formula of Doubly Constrained Spatial Interaction Model
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 dbcSIM <- glm(formula = TRIPS ~ 
                 ORIGIN_SZ + 
                 DESTIN_SZ + 
@@ -1248,6 +1303,8 @@ summary(dbcSIM)
 We can examine how the constraints hold for destinations this time.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 CalcRSquared(dbcSIM$data$TRIPS, dbcSIM$fitted.values)
 ```
 
@@ -1260,6 +1317,8 @@ Another useful model performance measure for continuous dependent variable is Ro
 First of all, let us create a list called model_list by using the code chun below.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 model_list <- list(unconstrained=uncSIM,
                    originConstrained=orcSIM,
                    destinationConstrained=decSIM,
@@ -1269,6 +1328,8 @@ model_list <- list(unconstrained=uncSIM,
 Next, we will compute the RMSE of all the models in model_list file by using the code chunk below.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 compare_performance(model_list,
                     metrics = "RMSE")
 ```
@@ -1282,6 +1343,8 @@ In this section, you will learn how to visualise the observed values and the fit
 Firstly we will extract the fitted values from each model by using the code chunk below.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 df <- as.data.frame(uncSIM$fitted.values) %>%
   round(digits = 0)
 ```
@@ -1289,24 +1352,31 @@ df <- as.data.frame(uncSIM$fitted.values) %>%
 Next, we will join the values to SIM_data data frame.
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 SIM_data <- SIM_data %>%
   cbind(df)
 ```
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 SIM_data <- SIM_data %>%
   rename(uncTRIPS = uncSIM.fitted.values)
 ```
 
-
 Repeat the same step by for Origin Constrained SIM (i.e. orcSIM)
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 df <- as.data.frame(orcSIM$fitted.values) %>%
   round(digits = 0)
 ```
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 SIM_data <- SIM_data %>%
   cbind(df) %>%
   rename(orcTRIPS = orcSIM.fitted.values)
@@ -1315,11 +1385,15 @@ SIM_data <- SIM_data %>%
 Repeat the same step by for Destination Constrained SIM (i.e. decSIM)
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 df <- as.data.frame(decSIM$fitted.values) %>%
   round(digits = 0)
 ```
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 SIM_data <- SIM_data %>%
   cbind(df) %>%
   rename(decTRIPS = decSIM.fitted.values)
@@ -1328,17 +1402,23 @@ SIM_data <- SIM_data %>%
 Repeat the same step by for Doubly Constrained SIM (i.e. dbcSIM)
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 df <- as.data.frame(dbcSIM$fitted.values) %>%
   round(digits = 0)
 ```
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 SIM_data <- SIM_data %>%
   cbind(df) %>%
   rename(dbcTRIPS = dbcSIM.fitted.values)
 ```
 
 ```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
 unc_p <- ggplot(data = SIM_data,
                 aes(x = uncTRIPS,
                     y = TRIPS)) +
@@ -1368,13 +1448,224 @@ ggarrange(unc_p, orc_p, dec_p, dbc_p,
           nrow = 2)
 ```
 
+## 18 Calibrating Spatial Interaction Models (School/Business)
+
+### Origin- (Production-) constrained Model
+
+Figure below shows the general formula of the origin-constrained model.
+
+![](Formula.jpg){width="269"}
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+orcSIM_Poisson <- glm(formula = TRIPS ~ 
+                ORIGIN_SZ +
+                log(SCHOOL_COUNT) +
+                log(BUSINESS_COUNT) +
+                log(dist) - 1,
+              family = poisson(link = "log"),
+              data = inter_zonal_flow,
+              na.action = na.exclude)
+summary(orcSIM_Poisson)
+```
+
+![](orcSIM_Poisson.png){width="315"}
+
+-   the ⍺1 and ⍺2 of SCHOOL_COUNT and BUSINESS_COUNT are 0.3384458 and -1.452245 respectively.
+-   𝛽, the distance decay parameter is -0.621984
+-   there are a series of parameters which are the vector of 𝜇𝑖 values associated with the origin constraints.
+
+Next, let us examine how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
+
+#### Goodness of fit
+
+In statistical modelling, the next question we would like to answer is how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
+
+In order to provide answer to this question, R-squared statistics will be used. However, R-squared is not an output of glm(). Hence we will write a function called CalcRSquared by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+CalcRSquared <- function(observed, estimated){
+  r <- cor(observed, estimated)
+  R2 <- r^2
+  R2
+}
+```
+
+NOw, we can examine how the constraints hold for destinations this time.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+CalcRSquared(orcSIM_Poisson$data$TRIPS, orcSIM_Poisson$fitted.values)
+```
+
+With reference to the R-Squared above, we can conclude that the model accounts for about 44% of the variation of flows in the systems. Not bad, but not brilliant either.
+
+### Doubly constrained model
+
+In this section, we will fit a doubly constrained SIM by using the general formula shown below:
+
+![](Doubly%20constrained%20model.png){width="294"}
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+dbcSIM_Poisson <- glm(formula = TRIPS ~ 
+                ORIGIN_SZ + 
+                DESTIN_SZ +
+                log(dist),
+              family = poisson(link = "log"),
+              data = inter_zonal_flow,
+              na.action = na.exclude)
+summary(dbcSIM_Poisson)
+```
+
+![](dbcSIM_Poisson.png){width="324" height="23"}
 
 
+(β=−1.8468315) indicates a negative exponential relationship between distance and the phenomenon being modeled.
+
+The negative sign suggests a decrease in the phenomenon as distance increases. In other words, the phenomenon tends to diminish or decay as you move farther away from a certain point.
+
+The magnitude of the value indicates the rate of decay. In your case, a larger negative value (β) suggests a faster decay—meaning the effect diminishes rapidly with distance.
+
+#### Goodness of fit
+In statistical modelling, the next question we would like to answer is how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
+
+In order to provide answer to this question, R-squared statistics will be used. However, R-squared is not an output of glm(). Hence we will write a function called CalcRSquared by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+CalcRSquared <- function(observed, estimated){
+  r <- cor(observed, estimated)
+  R2 <- r^2
+  R2
+}
+```
+
+Now, we can examine how the constraints hold for destinations this time.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+CalcRSquared(orcSIM_Poisson$data$TRIPS, orcSIM_Poisson$fitted.values)
+```
+With reference to the R-Squared above, we can conclude that the model accounts for about 44% of the variation of flows in the systems. Not bad, but not brilliant either.
 
 
+Next, let us examine how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+CalcRSquared(dbcSIM_Poisson$data$TRIPS,
+             dbcSIM_Poisson$fitted.values)
+```
+Notice that there is a relatively greater improvement in the R-Squared value.
 
 
+## 19 Model comparison
+
+### Statistical measures
+Another useful model performance measure for continuous dependent variable is Root Mean Squared Error. In this sub-section, you will learn how to use compare_performance() of performance package
+
+First of all, let us create a list called model_list by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+model_list <- list(
+  Origin_Constrained = orcSIM_Poisson,
+  Doubly_Constrained = dbcSIM_Poisson)
+```
 
 
-    
-               
+Next, we will compute the RMSE of all the models in model_list file by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+compare_performance(model_list,
+                    metrics = "RMSE")
+```
+
+The print above reveals that doubly constrained SIM is the best model among the two SIMs because it has the smallest RMSE value of 1906.694.
+
+### Visualising fitted values
+In this section, you will learn how to visualise the observed values and the fitted values.
+
+Firstly we will extract the fitted values from Origin-constrained Model by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+df <- as.data.frame(orcSIM_Poisson$fitted.values) %>%
+  round(digits = 0)
+```
+
+Next, we will append the fitted values into inter_zonal_flow data frame by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+inter_zonal_flow <- inter_zonal_flow %>%
+  cbind(df) %>%
+  rename(orcTRIPS = "orcSIM_Poisson.fitted.values")
+```
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+df <- as.data.frame(dbcSIM_Poisson$fitted.values) %>%
+  round(digits = 0)
+```
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+inter_zonal_flow <- inter_zonal_flow %>%
+  cbind(df) %>%
+  rename(dbcTRIPS = "dbcSIM_Poisson.fitted.values")
+```
+
+Next, two scatterplots will be created by using geom_point() and other appropriate functions of ggplot2 package.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+orc_p <- ggplot(data = inter_zonal_flow,
+                aes(x = orcTRIPS,
+                    y = TRIPS)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  coord_cartesian(xlim=c(0,150000),
+                  ylim=c(0,150000))
+
+dbc_p <- ggplot(data = inter_zonal_flow,
+                aes(x = dbcTRIPS,
+                    y = TRIPS)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  coord_cartesian(xlim=c(0,150000),
+                  ylim=c(0,150000))
+
+```
+
+Now, we will put all the graphs into a single visual for better comparison by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+ggarrange(orc_p, dbc_p,
+          ncol = 2,
+          nrow = 1)
+```
+
+Observation:
+There is still one outlier. By removing the outlier, the result could change as the line could either become less steep or steeper.
+
+
