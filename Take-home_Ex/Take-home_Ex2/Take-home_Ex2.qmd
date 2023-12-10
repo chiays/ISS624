@@ -1525,14 +1525,14 @@ summary(dbcSIM_Poisson)
 
 ![](dbcSIM_Poisson.png){width="324" height="23"}
 
-
 (β=−1.8468315) indicates a negative exponential relationship between distance and the phenomenon being modeled.
 
 The negative sign suggests a decrease in the phenomenon as distance increases. In other words, the phenomenon tends to diminish or decay as you move farther away from a certain point.
 
-The magnitude of the value indicates the rate of decay. In your case, a larger negative value (β) suggests a faster decay—meaning the effect diminishes rapidly with distance.
+The magnitude of the value indicates the rate of decay. In your case, a larger negative value (β) suggests a faster decay---meaning the effect diminishes rapidly with distance.
 
 #### Goodness of fit
+
 In statistical modelling, the next question we would like to answer is how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
 
 In order to provide answer to this question, R-squared statistics will be used. However, R-squared is not an output of glm(). Hence we will write a function called CalcRSquared by using the code chunk below.
@@ -1554,8 +1554,8 @@ Now, we can examine how the constraints hold for destinations this time.
 #| code-summary: "Show the code"
 CalcRSquared(orcSIM_Poisson$data$TRIPS, orcSIM_Poisson$fitted.values)
 ```
-With reference to the R-Squared above, we can conclude that the model accounts for about 44% of the variation of flows in the systems. Not bad, but not brilliant either.
 
+With reference to the R-Squared above, we can conclude that the model accounts for about 44% of the variation of flows in the systems. Not bad, but not brilliant either.
 
 Next, let us examine how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
 
@@ -1565,12 +1565,13 @@ Next, let us examine how well the proportion of variance in the dependent variab
 CalcRSquared(dbcSIM_Poisson$data$TRIPS,
              dbcSIM_Poisson$fitted.values)
 ```
-Notice that there is a relatively greater improvement in the R-Squared value.
 
+Notice that there is a relatively greater improvement in the R-Squared value.
 
 ## 19 Model comparison
 
 ### Statistical measures
+
 Another useful model performance measure for continuous dependent variable is Root Mean Squared Error. In this sub-section, you will learn how to use compare_performance() of performance package
 
 First of all, let us create a list called model_list by using the code chunk below.
@@ -1582,7 +1583,6 @@ model_list <- list(
   Origin_Constrained = orcSIM_Poisson,
   Doubly_Constrained = dbcSIM_Poisson)
 ```
-
 
 Next, we will compute the RMSE of all the models in model_list file by using the code chunk below.
 
@@ -1596,6 +1596,7 @@ compare_performance(model_list,
 The print above reveals that doubly constrained SIM is the best model among the two SIMs because it has the smallest RMSE value of 1906.694.
 
 ### Visualising fitted values
+
 In this section, you will learn how to visualise the observed values and the fitted values.
 
 Firstly we will extract the fitted values from Origin-constrained Model by using the code chunk below.
@@ -1665,7 +1666,234 @@ ggarrange(orc_p, dbc_p,
           nrow = 1)
 ```
 
-Observation:
-There is still one outlier. By removing the outlier, the result could change as the line could either become less steep or steeper.
+Observation: There is still one outlier. By removing the outlier, the result could change as the line could either become less steep or steeper.
 
+## 20 Identify Outlier
 
+![](Outlier.png){width="523"}
+
+Remove the outlier under Row 7569.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+inter_zonal_flow <- inter_zonal_flow[-7569,]
+```
+
+## 21 Re-Calibrating Spatial Interaction Models (School/Business)
+
+### Origin- (Production-) constrained Model
+
+Figure below shows the general formula of the origin-constrained model.
+
+![](Formula.jpg){width="269"}
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+orcSIM_Poisson <- glm(formula = TRIPS ~ 
+                ORIGIN_SZ +
+                log(SCHOOL_COUNT) +
+                log(BUSINESS_COUNT) +
+                log(dist) - 1,
+              family = poisson(link = "log"),
+              data = inter_zonal_flow,
+              na.action = na.exclude)
+summary(orcSIM_Poisson)
+```
+
+![](orcSIM_Poisson_R.png){width="326"}
+
+-   the ⍺1 and ⍺2 of SCHOOL_COUNT and BUSINESS_COUNT are 0.3189228 and -1.481761 respectively.
+-   𝛽, the distance decay parameter is -0.5882901
+-   there are a series of parameters which are the vector of 𝜇𝑖 values associated with the origin constraints.
+
+Next, let us examine how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
+
+#### Goodness of fit
+
+In statistical modelling, the next question we would like to answer is how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
+
+In order to provide answer to this question, R-squared statistics will be used. However, R-squared is not an output of glm(). Hence we will write a function called CalcRSquared by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+CalcRSquared <- function(observed, estimated){
+  r <- cor(observed, estimated)
+  R2 <- r^2
+  R2
+}
+```
+
+NOw, we can examine how the constraints hold for destinations this time.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+CalcRSquared(orcSIM_Poisson$data$TRIPS, orcSIM_Poisson$fitted.values)
+```
+
+With reference to the R-Squared above, we can conclude that the model accounts for about 43% of the variation of flows in the systems. Not bad, but not brilliant either.
+
+### Doubly constrained model
+
+In this section, we will fit a doubly constrained SIM by using the general formula shown below:
+
+![](Doubly%20constrained%20model.png){width="294"}
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+dbcSIM_Poisson <- glm(formula = TRIPS ~ 
+                ORIGIN_SZ + 
+                DESTIN_SZ +
+                log(dist),
+              family = poisson(link = "log"),
+              data = inter_zonal_flow,
+              na.action = na.exclude)
+summary(dbcSIM_Poisson)
+```
+
+![](dbcSIM_Poisson_R.png){width="322" height="23"}
+
+(β=−1.841475) indicates a negative exponential relationship between distance and the phenomenon being modeled.
+
+The negative sign suggests a decrease in the phenomenon as distance increases. In other words, the phenomenon tends to diminish or decay as you move farther away from a certain point.
+
+The magnitude of the value indicates the rate of decay. In your case, a larger negative value (β) suggests a faster decay---meaning the effect diminishes rapidly with distance.
+
+#### Goodness of fit
+
+In statistical modelling, the next question we would like to answer is how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
+
+In order to provide answer to this question, R-squared statistics will be used. However, R-squared is not an output of glm(). Hence we will write a function called CalcRSquared by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+CalcRSquared <- function(observed, estimated){
+  r <- cor(observed, estimated)
+  R2 <- r^2
+  R2
+}
+```
+
+Now, we can examine how the constraints hold for destinations this time.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+CalcRSquared(orcSIM_Poisson$data$TRIPS, orcSIM_Poisson$fitted.values)
+```
+
+With reference to the R-Squared above, we can conclude that the model accounts for about 43% of the variation of flows in the systems. Not bad, but not brilliant either.
+
+Next, let us examine how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+CalcRSquared(dbcSIM_Poisson$data$TRIPS,
+             dbcSIM_Poisson$fitted.values)
+```
+
+Notice that there is a relatively greater improvement in the R-Squared value.
+
+## 22 Re-Model comparison
+
+### Statistical measures
+
+Another useful model performance measure for continuous dependent variable is Root Mean Squared Error. In this sub-section, you will learn how to use compare_performance() of performance package
+
+First of all, let us create a list called model_list by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+model_list <- list(
+  Origin_Constrained = orcSIM_Poisson,
+  Doubly_Constrained = dbcSIM_Poisson)
+```
+
+Next, we will compute the RMSE of all the models in model_list file by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+compare_performance(model_list,
+                    metrics = "RMSE")
+```
+
+The print above reveals that doubly constrained SIM is the best model among the two SIMs because it has the smallest RMSE value of 1897.735.
+
+### Visualising fitted values
+
+In this section, you will learn how to visualise the observed values and the fitted values.
+
+Firstly we will extract the fitted values from Origin-constrained Model by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+df <- as.data.frame(orcSIM_Poisson$fitted.values) %>%
+  round(digits = 0)
+```
+
+Next, we will append the fitted values into inter_zonal_flow data frame by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+inter_zonal_flow <- inter_zonal_flow %>%
+  cbind(df) 
+```
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+df <- as.data.frame(dbcSIM_Poisson$fitted.values) %>%
+  round(digits = 0)
+```
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+inter_zonal_flow <- inter_zonal_flow %>%
+  cbind(df) 
+```
+
+Next, two scatterplots will be created by using geom_point() and other appropriate functions of ggplot2 package.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+orc_p <- ggplot(data = inter_zonal_flow,
+                aes(x = orcTRIPS,
+                    y = TRIPS)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  coord_cartesian(xlim=c(0,150000),
+                  ylim=c(0,150000))
+
+dbc_p <- ggplot(data = inter_zonal_flow,
+                aes(x = dbcTRIPS,
+                    y = TRIPS)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  coord_cartesian(xlim=c(0,150000),
+                  ylim=c(0,150000))
+
+```
+
+Now, we will put all the graphs into a single visual for better comparison by using the code chunk below.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+ggarrange(orc_p, dbc_p,
+          ncol = 2,
+          nrow = 1)
+```
+
+Observation: Both graphs look similar after the removal of outlier.
