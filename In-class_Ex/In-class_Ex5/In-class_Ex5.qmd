@@ -15,10 +15,9 @@ pacman::p_load(tmap,sf,spdep,sp,Matrix,spflow,reshape2,knitr,tidyverse)
 
 ## Data Preparation
 
-Before we can calibrate Spatial Econometric Interaction MOdels by using spflow package, threee data sets are required.
-They ar:
+Before we can calibrate Spatial Econometric Interaction MOdels by using spflow package, threee data sets are required. They ar:
 
-- a spatial weights
+-   a spatial weights
 
 ```{r}
 mpsz <- st_read(dsn = "data/geospatial/",
@@ -82,7 +81,6 @@ plot(mpsz_nb$by_distance,
 title("Distance")
 ```
 
-
 ```{r}
 odbus6_9 <- read_rds("data/rds/odbus6_9.rds")
 ```
@@ -93,7 +91,6 @@ odbus6_9 <- read_rds("data/rds/odbus6_9.rds")
 busstop_mpsz <- st_intersection(BusStop,mpsz) %>%   
 select(BUS_STOP_N, SUBZONE_C) %>%   st_drop_geometry()
 ```
-
 
 ```{r}
 #| code-fold: true 
@@ -116,6 +113,7 @@ dest_SZ <- left_join(odbus6_9 , busstop_mpsz,
   group_by(DEST_SZ) %>%
   summarise(TOT_TRIPS = sum(TRIPS))
 ```
+
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code" 
@@ -139,13 +137,11 @@ mpsz_flow <- read_rds("data/rds/mpsz_flow.rds")
 mpsz_var <- read_rds("data/rds/mpsz_var.rds")
 ```
 
-
 ## Creating 'spflow_netflow_network-class' objects
 
 'spflow_netflow_network-class' is an S4 class that contains all information on a spatial network which is composed by a set of nodes that are linked by some neightbourhood relation.
 
-It can be created by using ['spflow_network()'].
-
+It can be created by using \['spflow_network()'\].
 
 ```{r}
 mpsz_net <- spflow_network(
@@ -157,7 +153,6 @@ nb2mat(mpsz_nb$by_contiguity),
 
 mpsz_net
 ```
-
 
 ```{r}
 mpsz_net_pairs <- spflow_network_pair(
@@ -178,5 +173,35 @@ mpsz_multi_net
 ```
 
 
+===
 
+cor_formula <- log( 1 + TRIPS) ~
+    BUSSTOP_COUNT +
+    AGE7_12 +
+    AGE13_24 +
+    AGE25_64 +
+    SCHOOL_COUNT +
+    BUSINESS_COUNT +
+    RETAILS_COUNT +
+    FINSERV_COUNT +
+    P_(log(DISTANCE + 1))
 
+cor_mat <- pair_cor(
+  mpsz_multi_net,
+
+===
+
+base_model <- spflow(
+  spflow_formula = log(1 + TRIPS) ~
+    0_(BUSSTOP_COUNT +
+         AGE25_64) +
+    D_(SCHOOL_COUNT +
+    BUSINESS_COUNT +
+    RETAILS_COUNT +
+    FINSERV_COUNT +
+    P_(log(DISTANCE + 1)),
+  spflow_networks = mpsz_multi_net)
+  
+base_model
+
+===

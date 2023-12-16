@@ -578,6 +578,13 @@ Availability of origin-destination pair information:
           sg          sg       sg_sg      100.00% 97969/97969 313/313 313/313</code></pre>
 </div>
 </div>
+<p>===</p>
+<p>cor_formula &lt;- log( 1 + TRIPS) ~ BUSSTOP_COUNT + AGE7_12 + AGE13_24 + AGE25_64 + SCHOOL_COUNT + BUSINESS_COUNT + RETAILS_COUNT + FINSERV_COUNT + P_(log(DISTANCE + 1))</p>
+<p>cor_mat &lt;- pair_cor( mpsz_multi_net,</p>
+<p>===</p>
+<p>base_model &lt;- spflow( spflow_formula = log(1 + TRIPS) ~ 0_(BUSSTOP_COUNT + AGE25_64) + D_(SCHOOL_COUNT + BUSINESS_COUNT + RETAILS_COUNT + FINSERV_COUNT + P_(log(DISTANCE + 1)), spflow_networks = mpsz_multi_net)</p>
+<p>base_model</p>
+<p>===</p>
 
 
 </section>
