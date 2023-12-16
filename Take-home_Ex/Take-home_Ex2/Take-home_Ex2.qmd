@@ -100,134 +100,7 @@ pacman::p_load(sf, sfdep, tmap, tidyverse, knitr, plotly, httr, stplanr)
 
 ## **5 The Data**
 
-### Aspatial data
-
-For the purpose of this take-home exercise, Passenger Volume by Origin Destination Bus Stops downloaded from LTA DataMall will be used.
-
-#### Importing the aspatial data
-
-Since listings data set is in csv file format, we will use read_csv() of readr package to import origin_destination_bus.csv as shown the code chunk below. The output R object is called odbus1023 and it is a tibble data frame.
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-odbus1023 <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
-```
-
-A quick check of odbus tibble data frame shows that the values in OROGIN_PT_CODE and DESTINATON_PT_CODE are in numeric data type.
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-glimpse(odbus1023)
-```
-
-Convert these data values into factor data type.
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-odbus1023$ORIGIN_PT_CODE <- as.factor(odbus1023$ORIGIN_PT_CODE) 
-odbus1023$DESTINATION_PT_CODE <- as.factor(odbus1023$DESTINATION_PT_CODE)
-```
-
-Notice that both of them are in factor data type now.
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-glimpse(odbus1023)
-```
-
-#### TASK:- Weekday morning peak (Period: 6am to 9am)
-
-For the purpose of extracting the commuting flows during the weekday morning peak for the period from 6am to 9am. Call the output tibble data table as origin_WDMP and dest_WDMP.
-
-| Peak hour period     | Bus tap on time |
-|----------------------|-----------------|
-| Weekday morning peak | 6am to 9am      |
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-origin_WDMP <- odbus1023 %>%   
-        filter(DAY_TYPE == "WEEKDAY") %>%   
-        filter(TIME_PER_HOUR >= 6 &            
-        TIME_PER_HOUR <= 9) %>%   
-        group_by(ORIGIN_PT_CODE) %>%   
-        summarise(TRIPS = sum(TOTAL_TRIPS))
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-dest_WDMP <- odbus1023 %>%   
-        filter(DAY_TYPE == "WEEKDAY") %>%   
-        filter(TIME_PER_HOUR >= 6 &            
-        TIME_PER_HOUR <= 9) %>%   
-        group_by(DESTINATION_PT_CODE) %>%   
-        summarise(TRIPS = sum(TOTAL_TRIPS))
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-all_WDMP <- odbus1023 %>%   
-        filter(DAY_TYPE == "WEEKDAY") %>%   
-        filter(TIME_PER_HOUR >= 6 &            
-        TIME_PER_HOUR <= 9) %>%   
-        group_by(ORIGIN_PT_CODE,
-                 DESTINATION_PT_CODE) %>%   
-        summarise(TRIPS = sum(TOTAL_TRIPS))
-```
-
-View the top few rows of the summarized trips by ORIGIN_PT_CODE.
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-head(origin_WDMP)
-```
-
-View the top few rows of the summarized trips by DESTINATION_PT_CODE.
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-head(dest_WDMP)
-```
-
-We will save the output in rds format for future used.
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-write_rds(origin_WDMP, "data/rds/origin_WDMP.rds")
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-write_rds(dest_WDMP, "data/rds/dest_WDMP.rds")
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-write_rds(all_WDMP, "data/rds/all_WDMP.rds")
-```
-
-The code chunk below will be used to import the save into R environment.
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-origin_WDMP <- read_rds("data/rds/origin_WDMP.rds")
-dest_WDMP <- read_rds("data/rds/dest_WDMP.rds")
-all_WDMP <- read_rds("data/rds/all_WDMP.rds")
-```
-
-### Geospatial data
+### Geospatial data wrangling
 
 Two geospatial data will be used in this study, they are:
 
@@ -279,10 +152,242 @@ The structure of mpsz sf tibble data frame should look as below.
 #| code-summary: "Show the code"  
 glimpse(mpsz)
 ```
+### Creating Hexagon 
 
-## **6 Geospatial data wrangling**
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+honeycomb_grid = st_make_grid(BusStop, c(750, 750), what = "polygons", square = FALSE, crs = 3414) %>%
 
-### Combining Busstop and mpsz
+
+  st_sf() %>%
+  filter(lengths(st_intersects(geometry, BusStop)) > 0)
+```
+
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+tm_shape(mpsz) +
+  tm_polygons(title = "Singapore Boundary") +
+  tm_layout(main.title = "Singapore",
+            main.title.position = "center",
+            main.title.size = 1.0,
+            legend.height = 0.35, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha = 0.2)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+tm_shape(mpsz) +
+  tm_polygons(title = "Singapore", alpha = 0.5) +
+  tm_shape(honeycomb_grid) +
+  tm_polygons(col = "white", title = "Hexagons", alpha = 1) +
+  tm_layout(main.title = "Honeycomb grid with Singapore's BusStops",
+            main.title.position = "center",
+            main.title.size = 1.0,
+            legend.height = 0.35, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_compass(type="8star", size = 2, bg.color = "white", bg.alpha = 0.5) +
+  tm_scale_bar(bg.color = "white", bg.alpha = 0.5) +
+  tm_shape(BusStop) +
+  tm_dots(col = "blue", size = 0.01) +
+  tm_grid(alpha = 0.2)
+```
+
+### Assigning id to each hexagon
+
+Create a ID column so that it can be used in joining dataframes.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+honeycomb_grid$ID <- sprintf("H%04d", seq_len(nrow(honeycomb_grid))) %>% as.factor()
+```
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+write_rds(honeycomb_grid, "data/rds/honeycomb_grid.rds")
+```
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+honeycomb_grid <- read_rds("data/rds/honeycomb_grid.rds")
+```
+
+
+### Aspatial data
+
+For the purpose of this take-home exercise, Passenger Volume by Origin Destination Bus Stops downloaded from LTA DataMall will be used.
+
+#### Importing the aspatial data
+
+Since listings data set is in csv file format, we will use read_csv() of readr package to import origin_destination_bus.csv as shown the code chunk below. The output R object is called odbus1023 and it is a tibble data frame.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+odbus1023 <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
+```
+
+A quick check of odbus tibble data frame shows that the values in OROGIN_PT_CODE and DESTINATON_PT_CODE are in numeric data type.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+glimpse(odbus1023)
+```
+
+Convert these data values into factor data type.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+odbus1023$ORIGIN_PT_CODE <- as.factor(odbus1023$ORIGIN_PT_CODE) 
+odbus1023$DESTINATION_PT_CODE <- as.factor(odbus1023$DESTINATION_PT_CODE)
+```
+
+Notice that both of them are in factor data type now.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+glimpse(odbus1023)
+```
+
+#### TASK:- Weekday morning peak (Period: 6am to 9am)
+
+For the purpose of extracting the commuting flows during the weekday morning peak for the period from 6am to 9am. Call the output tibble data table as origin_WDMP and dest_WDMP.
+
+| Peak hour period     | Bus tap on time |
+|----------------------|-----------------|
+| Weekday morning peak | 6am to 9am      |
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+all_WDMP <- odbus1023 %>%
+  filter(DAY_TYPE == "WEEKDAY") %>%
+  filter( TIME_PER_HOUR >= 6 &
+            TIME_PER_HOUR < 9
+          ) %>%
+  group_by(ORIGIN_PT_CODE, DESTINATION_PT_CODE) %>%
+  summarise(TRIPS = sum(TOTAL_TRIPS))
+```
+
+View the top few rows of the summarized trips by ORIGIN_PT_CODE.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+head(all_WDMP)
+```
+
+
+We will save the output in rds format for future used.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+write_rds(all_WDMP, "data/rds/all_WDMP.rds")
+```
+
+
+The code chunk below will be used to import the save into R environment.
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+all_WDMP <- read_rds("data/rds/all_WDMP.rds")
+```
+
+Intersection of busstop with hexagon layer
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+BS_hex <- st_intersection(BusStop, honeycomb_grid) %>%
+  st_drop_geometry() %>%
+  select(c(BUS_STOP_N, ID))
+```
+
+Combining the data
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+all_WDMP_hex <- all_WDMP %>%
+  inner_join(BS_hex,
+             by = c("ORIGIN_PT_CODE" = "BUS_STOP_N")) %>%
+  rename(ORIGIN_HEX_ID = ID) %>%
+  inner_join(BS_hex,
+             by = c("DESTINATION_PT_CODE" = "BUS_STOP_N")) %>%
+  rename(DEST_HEX_ID = ID)
+```
+Sum by ID
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+all_WDMP_hex2 <- all_WDMP_hex %>%
+  group_by(ORIGIN_HEX_ID, DEST_HEX_ID) %>%
+  summarise(TRIPS = sum(TRIPS))
+```
+
+
+## **6 Flowlines**
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+flowlines <- all_WDMP_hex2 %>% od2line(
+  honeycomb_grid,
+  zone_code = "ID")
+write_rds(flowlines, "data/rds/flowlines.rds")
+```
+
+When the flow data are very messy and highly skewed like the one shown above, it is wiser to focus on selected flows, for example flow greater than or equal to 3000 as shown below.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+tm_shape(mpsz) +
+  tm_polygons(title = "Singapore", alpha = 0.5) +
+
+  tm_layout(main.title = "Weekdays 6AM - 9AM",
+          main.title.position = "center",
+          main.title.size = 0.80,
+          legend.height = 0.35, 
+          legend.width = 0.35,
+          frame = TRUE) +
+  
+tm_shape(honeycomb_grid) +
+  tm_polygons(col = "white", title = "Hexagons", alpha = 1) +
+  tm_borders(lwd = 0.7, col = "grey40") +
+  
+tm_shape(flowlines %>% filter(TRIPS >= 3000)) +
+  tm_lines(lwd = "TRIPS",
+           style = "quantile",
+           col = "blue",
+           scale = c(0.1, 1, 3, 5, 7, 10),
+           n = 6,
+           alpha = 0.5)
+           
+
+```
+
+Concentrated at interchange areas.
+
+
+### View by Subzones
 
 Code chunk below populates the planning subzone code (i.e. SUBZONE_C) of mpsz sf data frame into busstop sf data frame.
 
@@ -292,38 +397,32 @@ Code chunk below populates the planning subzone code (i.e. SUBZONE_C) of mpsz sf
 busstop_mpsz <- st_intersection(BusStop, mpsz) %>%   
 select(BUS_STOP_N, SUBZONE_C) %>%   st_drop_geometry()
 ```
+To incorporate Geometry to BusStop
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+busstop_mpsz_wGeo <- st_intersection(BusStop, mpsz) %>%   
+select(BUS_STOP_N, SUBZONE_C) 
+```
 
 Before moving to the next step, save the output into rds format.
 
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code" 
-write_rds(busstop_mpsz, "data/rds/busstop_mpsz.csv")
+write_rds(busstop_mpsz, "data/rds/busstop_mpsz.rds")
 ```
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+busstop_mpsz <- read_rds("data/rds/busstop_mpsz.rds")
+```
+
 
 Next, append the planning subzone code from busstop_mpsz data frame onto origin_WDMP (origin & destination) data frame.
 
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-origin_SZ <- left_join(origin_WDMP , busstop_mpsz,
-            by = c("ORIGIN_PT_CODE" = "BUS_STOP_N")) %>%
-  rename(ORIGIN_BS = ORIGIN_PT_CODE,
-         ORIGIN_SZ = SUBZONE_C) %>%
-  group_by(ORIGIN_SZ) %>%
-  summarise(TOT_TRIPS = sum(TRIPS))
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-dest_SZ <- left_join(dest_WDMP , busstop_mpsz,
-            by = c("DESTINATION_PT_CODE" = "BUS_STOP_N")) %>%
-  rename(DEST_BS = DESTINATION_PT_CODE,
-         DEST_SZ = SUBZONE_C) %>%
-  group_by(DEST_SZ) %>%
-  summarise(TOT_TRIPS = sum(TRIPS))
-```
 
 ```{r}
 #| code-fold: true 
@@ -353,50 +452,12 @@ all_SZ <- all_SZ %>%
   summarise(TOT_TRIPS = sum(TRIPS))
 ```
 
-Next, merge the origin_BS & dest_BS with busstop_mpsz data frame.
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-origin_BS <- merge(origin_WDMP, busstop_mpsz, by.x = "ORIGIN_PT_CODE", by.y = "BUS_STOP_N", all = TRUE) %>%   
-rename(ORIGIN_BS = ORIGIN_PT_CODE, ORIGIN_SZ = SUBZONE_C) %>%   
-group_by(ORIGIN_BS)
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-dest_BS <- merge(dest_WDMP, busstop_mpsz, by.x = "DESTINATION_PT_CODE", by.y = "BUS_STOP_N", all = TRUE) %>%   
-rename(DEST_BS = DESTINATION_PT_CODE, DEST_SZ = SUBZONE_C) %>%   
-group_by(DEST_BS)
-```
-
-
 Check for duplicate records
 
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code" 
-duplicate_origin_BS <- origin_BS %>%   
-  group_by_all() %>%   
-  filter(n()>1) %>%   
-  ungroup()
-
-duplicate_origin_SZ <- origin_SZ %>%   
-  group_by_all() %>%   
-  filter(n()>1) %>%   
-  ungroup()
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-duplicate_dest_BS <- dest_BS %>%   
-  group_by_all() %>%   
-  filter(n()>1) %>%   
-  ungroup()
-
-duplicate_dest_SZ <- dest_SZ %>%   
+duplicate_all_SZ <- all_SZ %>%   
   group_by_all() %>%   
   filter(n()>1) %>%   
   ungroup()
@@ -407,83 +468,31 @@ See if any duplicate records.
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code" 
-glimpse(duplicate_origin_BS)
+glimpse(duplicate_all_SZ)
 ```
 
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-glimpse(duplicate_origin_SZ)
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-glimpse(duplicate_dest_BS)
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-glimpse(duplicate_dest_SZ)
-```
 
 As shown above, there are duplicates. We can remove duplicate records (if any) with the following code.
 
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code" 
-origin_BS <- unique(origin_BS)
-origin_SZ <- unique(origin_SZ)
+all_SZ <- unique(all_SZ)
 ```
 
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-dest_BS <- unique(dest_BS)
-dest_SZ <- unique(dest_SZ)
-```
-
-Next, write a code chunk to update od_data data frame with the planning subzone codes.
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-origintrip_BS <- left_join(BusStop, origin_BS,                            
-            by = c("BUS_STOP_N" = "ORIGIN_BS"))
-```
+Next, write a code chunk to update od_data dataframe with the planning subzone codes.
 
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code"
 origintrip_SZ <- left_join(mpsz, 
-                           origin_SZ,
+                           all_SZ,
                            by = c("SUBZONE_C" = "ORIGIN_SZ"))
 ```
 
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-desttrip_BS <- left_join(BusStop, dest_BS,                            
-            by = c("BUS_STOP_N" = "DEST_BS"))
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code"
-desttrip_SZ <- left_join(mpsz, 
-                           dest_SZ,
-                           by = c("SUBZONE_C" = "DEST_SZ"))
-```
 
 Drop points without data (i.e. trip)
 
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code"
-non_finite_indices <- which(!is.finite(origintrip_BS$TRIPS))
-origintrip_BS$TRIPS[!is.finite(origintrip_BS$TRIPS)] <- 0
-```
 
 ```{r}
 #| code-fold: true 
@@ -492,57 +501,9 @@ non_finite_indices <- which(!is.finite(origintrip_SZ$TOT_TRIPS))
 origintrip_SZ$TOT_TRIPS[!is.finite(origintrip_SZ$TOT_TRIPS)] <- 0
 ```
 
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code"
-non_finite_indices <- which(!is.finite(desttrip_BS$TRIPS))
-desttrip_BS$TRIPS[!is.finite(desttrip_BS$TRIPS)] <- 0
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-non_finite_indices <- which(!is.finite(desttrip_SZ$TOT_TRIPS))
-desttrip_SZ$TOT_TRIPS[!is.finite(desttrip_SZ$TOT_TRIPS)] <- 0
-```
-
 ## **7 Choropleth Visualisation**
 
 Prepare a choropleth map showing the distribution of passenger trips at planning sub-zone level.
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show the code"
-tm_shape(origintrip_BS)+
-  tm_symbols(size = 0.5)+
-  tm_layout(main.title = "Passenger trips generated at origin bus-stop level",
-            main.title.position = "center",
-            main.title.size = 1.2,
-            legend.height = 0.45, 
-            legend.width = 0.35,
-            frame = TRUE) +
-
-  tm_compass(type="8star", size = 2) +
-  tm_scale_bar() +
-  tm_grid(alpha =0.2)
-```
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show the code"
-tm_shape(desttrip_BS)+
-  tm_symbols(size = 0.5)+
-  tm_layout(main.title = "Passenger trips generated at destination bus-stop level",
-            main.title.position = "center",
-            main.title.size = 1.2,
-            legend.height = 0.45, 
-            legend.width = 0.35,
-            frame = TRUE) +
-
-  tm_compass(type="8star", size = 2) +
-  tm_scale_bar() +
-  tm_grid(alpha =0.2)
-```
 
 ```{r}
 #| code-fold: true
@@ -564,25 +525,6 @@ tm_shape(origintrip_SZ)+
   tm_grid(alpha =0.2)
 ```
 
-```{r}
-#| code-fold: true
-#| code-summary: "Show the code"
-tm_shape(desttrip_SZ)+
-  tm_fill("TOT_TRIPS", 
-          style = "quantile", 
-          palette = "Blues",
-          title = "Passenger trips") +
-  tm_layout(main.title = "Passenger trips generated at planning sub-zone level (Destination)",
-            main.title.position = "center",
-            main.title.size = 1,
-            legend.height = 0.45, 
-            legend.width = 0.35,
-            frame = TRUE) +
-  tm_borders(alpha = 0.5) +
-  tm_compass(type="8star", size = 2) +
-  tm_scale_bar() +
-  tm_grid(alpha =0.2)
-```
 
 ## **8 Visualising Spatial Interaction**
 
@@ -612,22 +554,6 @@ flowLine <- od2line(flow = all_SZ_R,
 
 ### Visualising the desire lines
 
-To visualise the resulting desire lines, the code chunk below is used.
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show the code"
-tm_shape(mpsz) +
-  tm_polygons() +
-flowLine %>%  
-tm_shape() +
-  tm_lines(lwd = "TOT_TRIPS",
-           style = "quantile",
-           scale = c(0.1, 1, 3, 5, 7, 10),
-           n = 6,
-           alpha = 0.3)
-```
-
 When the flow data are very messy and highly skewed like the one shown above, it is wiser to focus on selected flows, for example flow greater than or equal to 5000 as shown below.
 
 ```{r}
@@ -636,7 +562,7 @@ When the flow data are very messy and highly skewed like the one shown above, it
 tm_shape(mpsz) +
   tm_polygons() +
 flowLine %>%  
-  filter(TOT_TRIPS >= 5000) %>%
+  filter(TOT_TRIPS >= 3000) %>%
 tm_shape() +
   tm_lines(lwd = "TOT_TRIPS",
            style = "quantile",
@@ -715,11 +641,15 @@ Using the steps you learned in previous exercises, create a point symbol map sho
 tmap_options(check.and.fix = TRUE)
 tm_shape(mpsz) +
   tm_polygons() +
+tm_shape(honeycomb_grid) +
+  tm_polygons() +
 tm_shape(schools_sf) +
   tm_dots()
 ```
 
 ## **10 Performing point-in-polygon count process**
+
+### SCHOOL 
 
 Next, we will count the number of schools located inside the planning subzones.
 
@@ -745,10 +675,9 @@ summary(mpsz$SCHOOL_COUNT)
 
 The summary statistics above reveals that there are excessive 0 values in SCHOOL_COUNT field. If log() is going to be used to transform this field, additional step is required to ensure that all 0 will be replaced with a value between 0 and 1 but neither 0 nor 1.
 
-## **11 Data Integration and Final Touch-up**
+### BUSINESS 
 
 Using the steps you learned in earlier sub-sections, count the number of Business points in each planning subzone.
-
 
 ```{r}
 #| code-fold: true
@@ -771,7 +700,7 @@ mpsz$`BUSINESS_COUNT`<- lengths(
     mpsz, business_sf))
 ```
 
-Compute and display the summary statistics of sch_count field.
+Compute and display the summary statistics of business_count field.
 
 ```{r}
 #| code-fold: true
@@ -785,10 +714,59 @@ summary(mpsz$BUSINESS_COUNT)
 tmap_options(check.and.fix = TRUE)
 tm_shape(mpsz) +
   tm_polygons() +
+tm_shape(honeycomb_grid) +
+  tm_polygons() +
 tm_shape(business_sf) +
   tm_dots()
 ```
 
+
+### FINSERV 
+
+Using the steps you learned in earlier sub-sections, count the number of Finance points in each planning subzone.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+Finserv_sf <- st_read(dsn = "data/geospatial",
+                      layer = "FinServ")
+```
+
+Next, we will count the number of business located inside the planning subzones.
+
+Count the number of schools within each planning subzone by using lengths() of Base and st_intersects() of sf package.
+
+Show the code chunk
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+mpsz$`FINSERV_COUNT`<- lengths(
+  st_intersects(
+    mpsz, Finserv_sf))
+```
+
+Compute and display the summary statistics of finserv_count field.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+summary(mpsz$FINSERV_COUNT)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+tmap_options(check.and.fix = TRUE)
+tm_shape(mpsz) +
+  tm_polygons() +
+tm_shape(honeycomb_grid) +
+  tm_polygons() +
+tm_shape(Finserv_sf) +
+  tm_dots()
+```
+
+## **11 FlowData**
 
 Now, it is time for us to bring in the flow_data.rds saved after Hands-on Exercise 3.
 
@@ -807,7 +785,7 @@ flow_data <- read_rds("data/rds/flow_data.rds") %>%
 #| code-summary: "Show the code"
 mpsz_tidy <- mpsz %>%
   st_drop_geometry() %>%
-  select(SUBZONE_C, BUSINESS_COUNT)
+  select(SUBZONE_C, BUSINESS_COUNT, FINSERV_COUNT)
 ```
 
 ```{r}
@@ -823,6 +801,7 @@ flow_data <- flow_data %>%
 #| code-summary: "Show the code"
 summary(flow_data)
 ```
+
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
@@ -832,6 +811,9 @@ flow_data$SCHOOL_COUNT <- ifelse(
 flow_data$BUSINESS_COUNT <- ifelse(
   flow_data$BUSINESS_COUNT == 0,
   0.99, flow_data$BUSINESS_COUNT)
+flow_data$FINSERV_COUNT <- ifelse(
+  flow_data$FINSERV_COUNT == 0,
+  0.99, flow_data$FINSERV_COUNT)
 ```
 
 ```{r}
@@ -1190,6 +1172,9 @@ SIM_data$ORIGIN_AGE25_64 <- ifelse(
 SIM_data$BUSINESS_COUNT <- ifelse(
   SIM_data$BUSINESS_COUNT == 0,
   0.99, SIM_data$BUSINESS_COUNT)
+SIM_data$FINSERV_COUNT <- ifelse(
+  SIM_data$FINSERV_COUNT == 0,
+  0.99, SIM_data$FINSERV_COUNT)
 ```
 
 You can run the summary() again.
@@ -1359,7 +1344,7 @@ compare_performance(model_list,
                     metrics = "RMSE")
 ```
 
-The print above reveals that doubly constrained SIM is the best model among all the four SIMs because it has the smallest RMSE value of 1487.111.
+The print above reveals that doubly constrained SIM is the best model among all the four SIMs because it has the smallest RMSE value of 3252.297.
 
 #### Visualising fitted
 
@@ -1488,6 +1473,7 @@ orcSIM_Poisson <- glm(formula = TRIPS ~
                 ORIGIN_SZ +
                 log(SCHOOL_COUNT) +
                 log(BUSINESS_COUNT) +
+                log(FINSERV_COUNT) +
                 log(dist) - 1,
               family = poisson(link = "log"),
               data = inter_zonal_flow,
@@ -1720,6 +1706,7 @@ orcSIM_Poisson <- glm(formula = TRIPS ~
                 ORIGIN_SZ +
                 log(SCHOOL_COUNT) +
                 log(BUSINESS_COUNT) +
+                log(FINSERV_COUNT) +
                 log(dist) - 1,
               family = poisson(link = "log"),
               data = inter_zonal_flow,
