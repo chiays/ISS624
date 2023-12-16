@@ -371,12 +371,6 @@ rename(DEST_BS = DESTINATION_PT_CODE, DEST_SZ = SUBZONE_C) %>%
 group_by(DEST_BS)
 ```
 
-============== #\| code-fold: true #\| code-summary: "Show the code" origin_SZ \<- left_join(origin_WDAP_5_8 , busstop_mpsz,\
-by = c("ORIGIN_PT_CODE" = "BUS_STOP_N")) %\>%\
-rename(ORIGIN_BS = ORIGIN_PT_CODE,\
-ORIGIN_SZ = SUBZONE_C) %\>%\
-group_by(ORIGIN_SZ) %\>%\
-summarise(TOT_TRIPS = sum(TRIPS)) ===============
 
 Check for duplicate records
 
@@ -755,6 +749,7 @@ The summary statistics above reveals that there are excessive 0 values in SCHOOL
 
 Using the steps you learned in earlier sub-sections, count the number of Business points in each planning subzone.
 
+
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
@@ -794,19 +789,6 @@ tm_shape(business_sf) +
   tm_dots()
 ```
 
-```{r}
-#| code-fold: true
-#| code-summary: "Show the code"
-mpsz$`BUSINESS_COUNT`<- lengths(
-  st_intersects(
-    mpsz, business_sf))
-```
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show the code"
-summary(mpsz$BUSINESS_COUNT)
-```
 
 Now, it is time for us to bring in the flow_data.rds saved after Hands-on Exercise 3.
 
@@ -815,7 +797,7 @@ Show the code chunk
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-flow_data <- read_rds("data/rds/flow_data_tidy.rds") %>%
+flow_data <- read_rds("data/rds/flow_data.rds") %>%
   rename(TRIPS = MORNING_PEAK)
 
 ```
@@ -823,9 +805,52 @@ flow_data <- read_rds("data/rds/flow_data_tidy.rds") %>%
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-flow_data$`BUSINESS_COUNT`<- lengths(
-  st_intersects(
-    flow_data, mpsz))
+mpsz_tidy <- mpsz %>%
+  st_drop_geometry() %>%
+  select(SUBZONE_C, BUSINESS_COUNT)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+flow_data <- flow_data %>%
+  left_join(mpsz_tidy,
+            by = c("ORIGIN_SZ" = "SUBZONE_C"))
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+summary(flow_data)
+```
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+flow_data$SCHOOL_COUNT <- ifelse(
+  flow_data$SCHOOL_COUNT == 0,
+  0.99, flow_data$SCHOOL_COUNT)
+flow_data$BUSINESS_COUNT <- ifelse(
+  flow_data$BUSINESS_COUNT == 0,
+  0.99, flow_data$BUSINESS_COUNT)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+summary(flow_data)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+write_rds(flow_data,
+          "data/rds/flow_data_tidy.rds")
+```
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+flow_data <- read_rds("data/rds/flow_data_tidy.rds")
 ```
 
 ## **12 Calibrating Spatial Interaction Models with R**
