@@ -79,7 +79,7 @@ Six R packages will be used for this exercise, they are sf, sfdep, tmap, tidyver
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code" 
-pacman::p_load(sf, sfdep, tmap, tidyverse, knitr, plotly, httr, stplanr)
+pacman::p_load(sf, sfdep, tmap, tidyverse, knitr, plotly, httr, stplanr,corrplot)
 ```
 
 1.  sf: Purpose: The sf package stands for "simple features" and is used for working with spatial data in R. It provides a framework for representing and manipulating geometric objects like points, lines, and polygons, making it useful for tasks such as geographic information system (GIS) analysis.
@@ -152,7 +152,8 @@ The structure of mpsz sf tibble data frame should look as below.
 #| code-summary: "Show the code"  
 glimpse(mpsz)
 ```
-### Creating Hexagon 
+
+### Creating Hexagon
 
 ```{r}
 #| code-fold: true
@@ -163,7 +164,6 @@ honeycomb_grid = st_make_grid(BusStop, c(750, 750), what = "polygons", square = 
   st_sf() %>%
   filter(lengths(st_intersects(geometry, BusStop)) > 0)
 ```
-
 
 ```{r}
 #| code-fold: true
@@ -222,7 +222,6 @@ write_rds(honeycomb_grid, "data/rds/honeycomb_grid.rds")
 #| code-summary: "Show the code" 
 honeycomb_grid <- read_rds("data/rds/honeycomb_grid.rds")
 ```
-
 
 ### Aspatial data
 
@@ -291,6 +290,11 @@ View the top few rows of the summarized trips by ORIGIN_PT_CODE.
 head(all_WDMP)
 ```
 
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code" 
+rm(odbus1023)
+```
 
 We will save the output in rds format for future used.
 
@@ -299,7 +303,6 @@ We will save the output in rds format for future used.
 #| code-summary: "Show the code" 
 write_rds(all_WDMP, "data/rds/all_WDMP.rds")
 ```
-
 
 The code chunk below will be used to import the save into R environment.
 
@@ -332,6 +335,9 @@ all_WDMP_hex <- all_WDMP %>%
              by = c("DESTINATION_PT_CODE" = "BUS_STOP_N")) %>%
   rename(DEST_HEX_ID = ID)
 ```
+
+
+
 Sum by ID
 
 ```{r}
@@ -341,7 +347,6 @@ all_WDMP_hex2 <- all_WDMP_hex %>%
   group_by(ORIGIN_HEX_ID, DEST_HEX_ID) %>%
   summarise(TRIPS = sum(TRIPS))
 ```
-
 
 ## **6 Flowlines**
 
@@ -384,8 +389,7 @@ tm_shape(flowlines %>% filter(TRIPS >= 3000)) +
 
 ```
 
-Concentrated at interchange areas.
-
+**Observation** : Origin BusStops were concentrated at interchange areas (e.g. Woodlands, Jurong, etc). Interestingly, most centroids are at west/east/north regions. The southern regions which mainly comprises of the central business district and high end residential areas have less bus commuters. This could be because they could be travelling via private vehicles or MRT.
 
 ### View by Subzones
 
@@ -396,14 +400,6 @@ Code chunk below populates the planning subzone code (i.e. SUBZONE_C) of mpsz sf
 #| code-summary: "Show the code" 
 busstop_mpsz <- st_intersection(BusStop, mpsz) %>%   
 select(BUS_STOP_N, SUBZONE_C) %>%   st_drop_geometry()
-```
-To incorporate Geometry to BusStop
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code" 
-busstop_mpsz_wGeo <- st_intersection(BusStop, mpsz) %>%   
-select(BUS_STOP_N, SUBZONE_C) 
 ```
 
 Before moving to the next step, save the output into rds format.
@@ -445,10 +441,10 @@ all_SZ <- left_join(all_SZ , busstop_mpsz,
 #| code-fold: true 
 #| code-summary: "Show the code" 
 all_SZ <- all_SZ %>%
-  rename(DEST_SZ = SUBZONE_C) %>%
+  rename(DESTIN_SZ = SUBZONE_C) %>%
   
   drop_na() %>%
-  group_by(ORIGIN_SZ, DEST_SZ) %>%
+  group_by(ORIGIN_SZ, DESTIN_SZ) %>%
   summarise(TOT_TRIPS = sum(TRIPS))
 ```
 
@@ -471,7 +467,6 @@ See if any duplicate records.
 glimpse(duplicate_all_SZ)
 ```
 
-
 As shown above, there are duplicates. We can remove duplicate records (if any) with the following code.
 
 ```{r}
@@ -490,9 +485,7 @@ origintrip_SZ <- left_join(mpsz,
                            by = c("SUBZONE_C" = "ORIGIN_SZ"))
 ```
 
-
 Drop points without data (i.e. trip)
-
 
 ```{r}
 #| code-fold: true 
@@ -525,7 +518,6 @@ tm_shape(origintrip_SZ)+
   tm_grid(alpha =0.2)
 ```
 
-
 ## **8 Visualising Spatial Interaction**
 
 Prepare a desire line by using stplanr package.
@@ -537,7 +529,7 @@ The code chunk below will be used to remove intra-zonal flows.
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-all_SZ_R <- all_SZ[all_SZ$ORIGIN_SZ != all_SZ$DEST_SZ,]
+all_SZ_R <- all_SZ[all_SZ$ORIGIN_SZ != all_SZ$DESTIN_SZ,]
 ```
 
 ### Creating desire lines
@@ -554,7 +546,7 @@ flowLine <- od2line(flow = all_SZ_R,
 
 ### Visualising the desire lines
 
-When the flow data are very messy and highly skewed like the one shown above, it is wiser to focus on selected flows, for example flow greater than or equal to 5000 as shown below.
+When the flow data are very messy and highly skewed like the one shown above, it is wiser to focus on selected flows, for example flow greater than or equal to 3000 as shown below.
 
 ```{r}
 #| code-fold: true
@@ -570,6 +562,8 @@ tm_shape() +
            n = 6,
            alpha = 0.3)
 ```
+
+**Observation** : Similar findings as per above at BusStop hexagon level. The subzone areas at the west/east/north regions are more concentrated as compared to the southern regions which mainly comprises of the central business district and high end residential areas have less bus commuters. This could be because they could be travelling via private vehicles or MRT.
 
 ## **9 Geocoding using SLA API**
 
@@ -633,6 +627,7 @@ schools_sf <- st_as_sf(schools,
   st_transform(crs = 3414)
 ```
 
+
 Using the steps you learned in previous exercises, create a point symbol map showing the location of schools with OSM as the background map.
 
 ```{r}
@@ -649,7 +644,7 @@ tm_shape(schools_sf) +
 
 ## **10 Performing point-in-polygon count process**
 
-### SCHOOL 
+### SCHOOL
 
 Next, we will count the number of schools located inside the planning subzones.
 
@@ -675,7 +670,7 @@ summary(mpsz$SCHOOL_COUNT)
 
 The summary statistics above reveals that there are excessive 0 values in SCHOOL_COUNT field. If log() is going to be used to transform this field, additional step is required to ensure that all 0 will be replaced with a value between 0 and 1 but neither 0 nor 1.
 
-### BUSINESS 
+### BUSINESS
 
 Using the steps you learned in earlier sub-sections, count the number of Business points in each planning subzone.
 
@@ -691,6 +686,8 @@ Next, we will count the number of business located inside the planning subzones.
 Count the number of schools within each planning subzone by using lengths() of Base and st_intersects() of sf package.
 
 Show the code chunk
+
+
 
 ```{r}
 #| code-fold: true
@@ -720,8 +717,9 @@ tm_shape(business_sf) +
   tm_dots()
 ```
 
+**Observation** : Businesses mainly located at the Tuas and southern regions (i.e. CBD). The Changi area also seems to form a small centroid which consist of the Tech hub (e.g. IBM, JP Morgon).
 
-### FINSERV 
+### FINSERV
 
 Using the steps you learned in earlier sub-sections, count the number of Finance points in each planning subzone.
 
@@ -766,6 +764,8 @@ tm_shape(Finserv_sf) +
   tm_dots()
 ```
 
+**Observation** : It is clear from the graph that the Finserv is mainly located at the CBD.
+
 ## **11 FlowData**
 
 Now, it is time for us to bring in the flow_data.rds saved after Hands-on Exercise 3.
@@ -779,6 +779,7 @@ flow_data <- read_rds("data/rds/flow_data.rds") %>%
   rename(TRIPS = MORNING_PEAK)
 
 ```
+
 
 ```{r}
 #| code-fold: true
@@ -890,6 +891,7 @@ mpsz_sp
 ### Computing the distance matrix
 
 Next, spDists() of sp package will be used to compute the Euclidean distance between the centroids of the planning subzones.
+
 
 ```{r}
 #| code-fold: true 
@@ -1019,16 +1021,14 @@ flow_data$ORIGIN_SZ <- as.factor(flow_data$ORIGIN_SZ)
 flow_data$DESTIN_SZ <- as.factor(flow_data$DESTIN_SZ)
 ```
 
-Now, left_join() of dplyr will be used to flow_data dataframe and distPair dataframe. The output is called flow_data1.
-
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code"
-flow_data1 <- flow_data %>%
-  left_join (distPair,
-             by = c("ORIGIN_SZ" = "orig",
-                    "DESTIN_SZ" = "dest"))
+inter_zonal_flow$ORIGIN_SZ <- as.factor(inter_zonal_flow$ORIGIN_SZ)
+inter_zonal_flow$DESTIN_SZ <- as.factor(inter_zonal_flow$DESTIN_SZ)
 ```
+
+
 
 ## **17 Preparing Origin and Destination Attributes**
 
@@ -1053,31 +1053,23 @@ pop <- pop %>%
 ### Preparing origin attribute
 
 ```{r}
-flow_data1 <- flow_data1 %>%
+flow_data <- flow_data %>%
   left_join(pop,
             by = c(ORIGIN_SZ = "SZ")) %>%
   select(-c(PA, SZ_NAME))
 
 ```
 
-#### Preparing destination attribute
-
-```{r}
-flow_data1 <- flow_data1 %>%
-  left_join(pop,
-            by = c(DESTIN_SZ = "SZ")) %>%
-  select(-c(PA, SZ_NAME))
-```
 
 We will called the output data file SIM_data. it is in rds data file format.
 
 ```{r}
-write_rds(flow_data1, "data/rds/SIM_data.rds")
+write_rds(flow_data, "data/rds/SIM_data.rds")
 ```
 
 ### Calibrating Spatial Interaction Models
 
-In this section, you will learn how to calibrate Spatial Interaction Models by using Poisson Regression method.
+Calibrate Spatial Interaction Models by using Poisson Regression method.
 
 #### Importing the modelling data
 
@@ -1085,13 +1077,6 @@ Firstly, let us import the modelling data by using the code chunk below.
 
 ```{r}
 SIM_data <- read_rds("data/rds/SIM_data.rds")
-```
-
-```{r}
-#| code-fold: true 
-#| code-summary: "Show the code"
-SIM_data <- SIM_data %>%
-  rename(dist = dist.x)
 ```
 
 #### Visualising the dependent variable Firstly, let us plot the distribution of the dependent variable (i.e. TRIPS) by using histogram method by using the code chunk below.
@@ -1144,31 +1129,29 @@ In the code chunk below, summary() of Base R is used to compute the summary stat
 summary(SIM_data)
 ```
 
-The print report above reveals that variables ORIGIN_AGE7_12, ORIGIN_AGE13_24, ORIGIN_AGE25_64,DESTIN_AGE7_12, DESTIN_AGE13_24, DESTIN_AGE25_64 consist of 0 values.
+The print report above reveals that variables AGE7_12, AGE13_24, AGE25_64 and FlowNoIntra consist of 0 values.
 
 In view of this, code chunk below will be used to replace zero values to 0.99.
 
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code"
-SIM_data$DESTIN_AGE7_12 <- ifelse(
-  SIM_data$DESTIN_AGE7_12 == 0,
-  0.99, SIM_data$DESTIN_AGE7_12)
-SIM_data$DESTIN_AGE13_24 <- ifelse(
-  SIM_data$DESTIN_AGE13_24 == 0,
-  0.99, SIM_data$DESTIN_AGE13_24)
-SIM_data$DESTIN_AGE25_64 <- ifelse(
-  SIM_data$DESTIN_AGE25_64 == 0,
-  0.99, SIM_data$DESTIN_AGE25_64)
-SIM_data$ORIGIN_AGE7_12 <- ifelse(
-  SIM_data$ORIGIN_AGE7_12 == 0,
-  0.99, SIM_data$ORIGIN_AGE7_12)
-SIM_data$ORIGIN_AGE13_24 <- ifelse(
-  SIM_data$ORIGIN_AGE13_24 == 0,
-  0.99, SIM_data$ORIGIN_AGE13_24)
-SIM_data$ORIGIN_AGE25_64 <- ifelse(
-  SIM_data$ORIGIN_AGE25_64 == 0,
-  0.99, SIM_data$ORIGIN_AGE25_64)
+SIM_data$AGE7_12 <- ifelse(
+  SIM_data$AGE7_12 == 0,
+  0.99, SIM_data$AGE7_12)
+SIM_data$AGE13_24 <- ifelse(
+  SIM_data$AGE13_24 == 0,
+  0.99, SIM_data$AGE13_24)
+SIM_data$AGE25_64 <- ifelse(
+  SIM_data$AGE25_64 == 0,
+  0.99, SIM_data$AGE25_64)
+SIM_data$FlowNoIntra <- ifelse(
+  SIM_data$FlowNoIntra == 0,
+  0.99, SIM_data$FlowNoIntra)
+
+SIM_data$SCHOOL_COUNT <- ifelse(
+  SIM_data$SCHOOL_COUNT == 0,
+  0.99, SIM_data$SCHOOL_COUNT)
 SIM_data$BUSINESS_COUNT <- ifelse(
   SIM_data$BUSINESS_COUNT == 0,
   0.99, SIM_data$BUSINESS_COUNT)
@@ -1189,7 +1172,7 @@ Notice that all the 0 values have been replaced by 0.99.
 
 #### Unconstrained Spatial Interaction Model
 
-In this section, you will learn how to calibrate an unconstrained spatial interaction model by using glm() of Base Stats. The explanatory variables are origin population by different age cohort, destination population by different age cohort (i.e. ORIGIN_AGE25_64) and distance between origin and destination in km (i.e. dist).
+Calibrate an unconstrained spatial interaction model by using glm() of Base Stats. The explanatory variables are origin population by different age cohort, destination population by different age cohort (i.e. ORIGIN_AGE25_64) and distance between origin and destination in km (i.e. dist).
 
 The general formula of Unconstrained Spatial Interaction Model
 
@@ -1238,7 +1221,7 @@ r2_mcfadden(uncSIM)
 
 #### Origin (Production) constrained SIM
 
-In this section, we will fit an origin constrained SIM by using the code3 chunk below.
+We will fit an origin constrained SIM by using the code chunk below.
 
 The general formula of Origin Constrained Spatial Interaction Model
 
@@ -1252,8 +1235,11 @@ orcSIM <- glm(formula = TRIPS ~
               family = poisson(link = "log"),
               data = SIM_data,
               na.action = na.exclude)
-summary(orcSIM)
+orcSIM
 ```
+
+Low coefficient for "DESTIN_AGE25_64".
+
 
 We can examine how the constraints hold for destinations this time.
 
@@ -1265,7 +1251,7 @@ CalcRSquared(orcSIM$data$TRIPS, orcSIM$fitted.values)
 
 #### Destination constrained
 
-In this section, we will fit a destination constrained SIM by using the code chunk below.
+We will fit a destination constrained SIM by using the code chunk below.
 
 The general formula of Destination Constrained Spatial Interaction Model
 
@@ -1280,8 +1266,10 @@ decSIM <- glm(formula = TRIPS ~
               family = poisson(link = "log"),
               data = SIM_data,
               na.action = na.exclude)
-summary(decSIM)
+decSIM
 ```
+
+Higher coefficient for ORIGIN_AGE25_64.
 
 We can examine how the constraints hold for destinations this time.
 
@@ -1293,7 +1281,7 @@ CalcRSquared(decSIM$data$TRIPS, decSIM$fitted.values)
 
 #### Doubly constrained
 
-In this section, we will fit a doubly constrained SIM by using the code chunk below.
+We will fit a doubly constrained SIM by using the code chunk below.
 
 The general formula of Doubly Constrained Spatial Interaction Model
 
@@ -1307,8 +1295,11 @@ dbcSIM <- glm(formula = TRIPS ~
               family = poisson(link = "log"),
               data = SIM_data,
               na.action = na.exclude)
-summary(dbcSIM)
+dbcSIM
 ```
+
+Negative coefficient for distance.
+
 
 We can examine how the constraints hold for destinations this time.
 
@@ -1346,9 +1337,9 @@ compare_performance(model_list,
 
 The print above reveals that doubly constrained SIM is the best model among all the four SIMs because it has the smallest RMSE value of 3252.297.
 
-#### Visualising fitted
+#### Visualizing fitted
 
-In this section, you will learn how to visualise the observed values and the fitted values.
+Visualize the observed values and the fitted values.
 
 Firstly we will extract the fitted values from each model by using the code chunk below.
 
@@ -1458,7 +1449,38 @@ ggarrange(unc_p, orc_p, dec_p, dbc_p,
           nrow = 2)
 ```
 
-## 18 Calibrating Spatial Interaction Models (School/Business)
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+inter_zonal_flow$SCHOOL_COUNT<- as.numeric(inter_zonal_flow$SCHOOL_COUNT)
+inter_zonal_flow$BUSINESS_COUNT<- as.numeric(inter_zonal_flow$BUSINESS_COUNT)
+inter_zonal_flow$FINSERV_COUNT<- as.numeric(inter_zonal_flow$FINSERV_COUNT)
+inter_zonal_flow$RETAIL_COUNT<- as.numeric(inter_zonal_flow$RETAIL_COUNT)
+inter_zonal_flow$TRIPS<- as.numeric(inter_zonal_flow$TRIPS)
+```
+
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+inter_zonal_flow_CORR <- inter_zonal_flow %>%
+  st_drop_geometry()
+```
+
+
+```{r}
+#| code-fold: true 
+#| code-summary: "Show the code"
+vars.cor = cor(inter_zonal_flow_CORR[11:14])
+corrplot.mixed(vars.cor,
+         lower = "ellipse", 
+               upper = "number",
+               tl.pos = "lt",
+               diag = "l",
+               tl.col = "black")
+```
+
+## 18 Calibrating Spatial Interaction Models (School/Business/Finserv)
 
 ### Origin- (Production-) constrained Model
 
@@ -1474,17 +1496,17 @@ orcSIM_Poisson <- glm(formula = TRIPS ~
                 log(SCHOOL_COUNT) +
                 log(BUSINESS_COUNT) +
                 log(FINSERV_COUNT) +
+                log(RETAIL_COUNT) +
                 log(dist) - 1,
               family = poisson(link = "log"),
               data = inter_zonal_flow,
               na.action = na.exclude)
-summary(orcSIM_Poisson)
+orcSIM_Poisson
 ```
 
-![](orcSIM_Poisson.png){width="315"}
-
--   the ⍺1 and ⍺2 of SCHOOL_COUNT and BUSINESS_COUNT are 0.3384458 and -1.452245 respectively.
--   𝛽, the distance decay parameter is -0.621984
+-   the SCHOOL_COUNT and RETAIL_COUNT are 0.4756 and 0.1797 respectively.
+-   NA value for BUSINESS_COUNT and FINSERV_COUNT.
+-   𝛽, the distance decay parameter is --1.6930
 -   there are a series of parameters which are the vector of 𝜇𝑖 values associated with the origin constraints.
 
 Next, let us examine how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
@@ -1531,10 +1553,8 @@ dbcSIM_Poisson <- glm(formula = TRIPS ~
               family = poisson(link = "log"),
               data = inter_zonal_flow,
               na.action = na.exclude)
-summary(dbcSIM_Poisson)
+dbcSIM_Poisson
 ```
-
-![](dbcSIM_Poisson.png){width="324" height="23"}
 
 (β=−1.8468315) indicates a negative exponential relationship between distance and the phenomenon being modeled.
 
@@ -1707,17 +1727,17 @@ orcSIM_Poisson <- glm(formula = TRIPS ~
                 log(SCHOOL_COUNT) +
                 log(BUSINESS_COUNT) +
                 log(FINSERV_COUNT) +
+                log(RETAIL_COUNT) +
                 log(dist) - 1,
               family = poisson(link = "log"),
               data = inter_zonal_flow,
               na.action = na.exclude)
-summary(orcSIM_Poisson)
+orcSIM_Poisson
 ```
 
-![](orcSIM_Poisson_R.png){width="326"}
-
--   the ⍺1 and ⍺2 of SCHOOL_COUNT and BUSINESS_COUNT are 0.3189228 and -1.481761 respectively.
--   𝛽, the distance decay parameter is -0.5882901
+-   the SCHOOL_COUNT and RETAIL_COUNT are 0.4573 and 0.1855 respectively.
+-   BUSINESS_COUNT and FINSERV_COUNT are NA
+-   𝛽, the distance decay parameter is -1.6823
 -   there are a series of parameters which are the vector of 𝜇𝑖 values associated with the origin constraints.
 
 Next, let us examine how well the proportion of variance in the dependent variable (i.e. TRIPS) that can be explained by the explanatory variables.
@@ -1764,10 +1784,10 @@ dbcSIM_Poisson <- glm(formula = TRIPS ~
               family = poisson(link = "log"),
               data = inter_zonal_flow,
               na.action = na.exclude)
-summary(dbcSIM_Poisson)
+dbcSIM_Poisson
 ```
 
-![](dbcSIM_Poisson_R.png){width="322" height="23"}
+
 
 (β=−1.841475) indicates a negative exponential relationship between distance and the phenomenon being modeled.
 
@@ -1908,4 +1928,6 @@ ggarrange(orc_p, dbc_p,
           nrow = 1)
 ```
 
-Observation: Both graphs look similar after the removal of outlier.
+**Observation**:
+
+Both graphs are now similar after the removal of outlier.
